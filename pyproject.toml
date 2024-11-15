@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cfmtoolbox-editor"
+version = "0.1.0"
+description = ""
+authors = ["Annika Kienle <annika.kienle@student.kit.edu>",  "Seid Jadadic <seid.jadadic@student.kit.edu>", "Kilian Tran <uhjrq@student.kit.edu"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+cfmtoolbox = "^0.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."cfmtoolbox.plugins"]
+edit = "cfmtoolbox_editor:edit"

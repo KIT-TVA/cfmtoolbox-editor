@@ -1,0 +1,11 @@
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.vscode/
+.venv/
+__pycache__/
+.idea/
+.coverage
+dist/
+build/
+poetry.lock
