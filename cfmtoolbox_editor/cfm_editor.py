@@ -19,7 +19,6 @@ class CFMEditorApp:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
-        # TODO: Calculate feature positions and display the model
         self._draw_model()
         self.root.mainloop()
 
@@ -55,6 +54,7 @@ class CFMEditorApp:
                 self.cfm.root.children.append(new_feature)
                 self._draw_model()
 
+    # TODO: Calculate more suitable feature positions
     def _draw_model(self):
         self.canvas.delete("all")
         y_offset = 50
@@ -73,6 +73,7 @@ class CFMEditorApp:
             self.feature_positions[feature.name] = (x, y)
             y_offset += 60
 
+        for feature in self.cfm.features:
             for child in feature.children:
                 parent_pos = self.feature_positions.get(feature.name)
                 child_pos = self.feature_positions.get(child.name)
@@ -80,8 +81,9 @@ class CFMEditorApp:
                     x1, y1 = parent_pos
                     x2, y2 = child_pos
                     # Draw a line between the center of the rectangles
-                    line_id = self.canvas.create_line(x1, y1 + 10, x2, y2 - 10)
+                    self.canvas.create_line(x1, y1 + 10, x2, y2 - 10, fill="black")
 
+    # TODO: Can we make the nodes actually clickable?
     def on_right_click(self, event):
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="Add Feature", command=lambda: self.add_feature(event))
