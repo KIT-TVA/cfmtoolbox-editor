@@ -57,33 +57,27 @@ class CFMEditorApp:
     # TODO: Calculate more suitable feature positions
     def _draw_model(self):
         self.canvas.delete("all")
-        y_offset = 50
-        self.feature_positions = {}
-        for feature in self.cfm.features:
-            # TODO: Handle multiple intervals
-            cardinality_interval = feature.instance_cardinality.intervals[0]
-            x, y = 100, y_offset
-            text = f"{feature} [{cardinality_interval.lower}, {cardinality_interval.upper}]"
-            text_id = self.canvas.create_text(x, y, text=text, tags=feature)
-            bbox = self.canvas.bbox(text_id)
-            rect_id = self.canvas.create_rectangle(bbox, fill="lightgrey")
-            # Move the text to be on top of the rectangle
-            self.canvas.tag_raise(text_id, rect_id)
-            # Store the position of the feature
-            self.feature_positions[feature.name] = (x, y)
-            y_offset += 60
+        self.draw_feature(self.cfm.root, 400, 50)
 
-        for feature in self.cfm.features:
-            for child in feature.children:
-                parent_pos = self.feature_positions.get(feature.name)
-                child_pos = self.feature_positions.get(child.name)
-                if parent_pos and child_pos:
-                    x1, y1 = parent_pos
-                    x2, y2 = child_pos
-                    # Draw a line between the center of the rectangles
-                    self.canvas.create_line(x1, y1 + 10, x2, y2 - 10, fill="black")
+    def draw_feature(self, feature: Feature, x: int, y: int, x_offset:int = 200):
+        # TODO: Handle multiple intervals
+        cardinality_interval = feature.instance_cardinality.intervals[0]
+        text = f"{feature} [{cardinality_interval.lower}, {cardinality_interval.upper}]"
+        node_id = self.canvas.create_text(x, y, text=text, tags=feature.name)
+        bbox = self.canvas.bbox(node_id)
+        rect_id = self.canvas.create_rectangle(bbox, fill="lightgrey")
+        # Move the text to be on top of the rectangle
+        self.canvas.tag_raise(node_id, rect_id)
 
-    # TODO: Can we make the nodes actually clickable?
+        # Recursively draw children
+        if feature.children:
+            new_y = y + 50
+            for i, child in enumerate(feature.children):
+                new_x = x - x_offset + (i * ((2 * x_offset) // (len(feature.children) - 1)))
+                self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
+                self.draw_feature(child, new_x, new_y, x_offset // 2)
+
+    # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
     def on_right_click(self, event):
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="Add Feature", command=lambda: self.add_feature(event))
