@@ -12,6 +12,7 @@ class CFMEditorApp:
         self.original_cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
+        self.feature_states = {}  # Dictionary to track expanded/collapsed state of features
 
         self._setup_ui()
 
@@ -19,8 +20,14 @@ class CFMEditorApp:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
+        self._initialize_feature_states(self.cfm.root)
         self._draw_model()
         self.root.mainloop()
+
+    def _initialize_feature_states(self, feature):
+        self.feature_states[id(feature)] = True  # Initialize all features as expanded
+        for child in feature.children:
+            self._initialize_feature_states(child)
 
     def _setup_ui(self):
         self.canvas = tk.Canvas(self.root, width=800, height=600, bg="white")
@@ -58,6 +65,7 @@ class CFMEditorApp:
 
     def _reset_model(self):
         self.cfm = deepcopy(self.original_cfm)
+        self._initialize_feature_states(self.cfm.root)
         self._draw_model()
 
     # TODO: Calculate more suitable feature positions
@@ -74,18 +82,29 @@ class CFMEditorApp:
         rect_id = self.canvas.create_rectangle(bbox, fill="lightgrey")
         self.canvas.tag_raise(node_id, rect_id)
 
+        # Add collapse/expand button
+        if feature.children:
+            expanded = self.feature_states.get(id(feature), True)
+            button_text = "-" if expanded else "+"
+            button_id = self.canvas.create_text(bbox[2] + 10, bbox[3], text=button_text, tags="button")
+            self.canvas.tag_bind(button_id, "<Button-1>", lambda event, f=feature: self.toggle_children(event, f))
+
         # Click event handling (Button-1 is left mouse button, Button-3 is right mouse button)
         # self.canvas.tag_bind(node_id, "<Button-1>", lambda event, f=feature: self.on_left_click_node(event, f))
         self.canvas.tag_bind(node_id, "<Button-3>", lambda event, f=feature: self.on_right_click_node(event, f))
 
-        # Recursively draw children
-        if feature.children:
+        # Recursively draw children if expanded
+        if feature.children and self.feature_states.get(id(feature), True):
             new_y = y + 50
             for i, child in enumerate(feature.children):
                 new_x = x if len(feature.children) == 1 else x - x_offset + (
                             i * ((2 * x_offset) // (len(feature.children) - 1)))
                 self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
                 self.draw_feature(child, new_x, new_y, x_offset // 2)
+
+    def toggle_children(self, event, feature):
+        self.feature_states[id(feature)] = not self.feature_states.get(id(feature), True)
+        self._draw_model()
 
     # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
     def on_right_click_node(self, event, feature):
@@ -105,6 +124,7 @@ class CFMEditorApp:
                                       instance_cardinality=Cardinality([Interval(min_card, max_card)]),
                                       group_type_cardinality=Cardinality([]),
                                       group_instance_cardinality=Cardinality([]), parent=parent, children=[])
+                self.feature_states[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
                 self._draw_model()
 
