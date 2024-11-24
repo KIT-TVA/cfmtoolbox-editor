@@ -31,13 +31,34 @@ class CFMEditorApp:
 
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=self.root.quit)
+        self.file_menu.add_command(label="Exit", command=self._exit_application)
 
-        # TODO: Add Reset Button
-        # TODO: On save, ask for confirmation before closing
         self.model_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.save_button = tk.Button(self.root, text="Save", command=self.root.quit)
-        self.save_button.pack(side='bottom')
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.menu_bar.add_cascade(label="Model", menu=self.model_menu)
+
+        button_frame = tk.Frame(self.root)
+        button_frame.pack(side='bottom', pady=5)
+
+        self.save_button = tk.Button(button_frame, text="Save", command=self._save_model)
+        self.save_button.pack(side='left', padx=5)
+
+        self.reset_button = tk.Button(button_frame, text="Reset", command=self._reset_model)
+        self.reset_button.pack(side='left', padx=5)
+
+    def _exit_application(self):
+        self.root.quit()
+
+    def _confirm_save_changes(self):
+        return tk.messagebox.askokcancel("Save", "Do you want to save changes?")
+
+    def _save_model(self):
+        if self._confirm_save_changes():
+            self.root.quit()
+
+    def _reset_model(self):
+        self.cfm = deepcopy(self.original_cfm)
+        self._draw_model()
 
     # TODO: Calculate more suitable feature positions
     def _draw_model(self):
