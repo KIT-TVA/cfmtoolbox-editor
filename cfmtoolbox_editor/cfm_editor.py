@@ -75,12 +75,36 @@ class CFMEditorApp:
 
     def draw_feature(self, feature: Feature, x: int, y: int, x_offset: int = 200):
         # TODO: Handle multiple intervals
-        cardinality_interval = feature.instance_cardinality.intervals[0]
-        text = f"{feature} [{cardinality_interval.lower}, {cardinality_interval.upper}]"
-        node_id = self.canvas.create_text(x, y, text=text, tags=feature.name)
+        # TODO: First check if intervals exist
+        feature_instance_cardinality = feature.instance_cardinality.intervals[
+            0] if feature.instance_cardinality.intervals else Interval(0, 0)
+        group_type_cardinality = feature.group_type_cardinality.intervals[
+            0] if feature.group_type_cardinality.intervals else Interval(0, 0)
+        group_instance_cardinality = feature.group_instance_cardinality.intervals[
+            0] if feature.group_instance_cardinality.intervals else Interval(0, 0)
+
+        node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
+        # TODO: Add padding to the rectangle
         bbox = self.canvas.bbox(node_id)
         rect_id = self.canvas.create_rectangle(bbox, fill="lightgrey")
         self.canvas.tag_raise(node_id, rect_id)
+
+        # bbox[1] is the y-coordinate of the top side of the box
+        feature_instance_y = bbox[1] - 10
+        feature_instance_x = x - 20
+        # TODO: The brackets don't look nice
+        # TODO: Position on right of arrow for children on the right and central for root
+        feature_instance_text = f"<{feature_instance_cardinality.lower}, {feature_instance_cardinality.upper}>"
+        feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
+                                                      text=feature_instance_text,
+                                                      tags=f"{feature.name}_feature_instance")
+
+        # TODO: Add half circle for group
+        # bbox[3] is the y-coordinate of the bottom of the text box
+        group_type_y = bbox[3] + 10
+        group_type_text = f"[{group_type_cardinality.lower}, {group_type_cardinality.upper}]"
+        group_type_id = self.canvas.create_text(x, group_type_y, text=group_type_text,
+                                                tags=f"{feature.name}_group_type")
 
         # Add collapse/expand button
         if feature.children:
@@ -95,10 +119,10 @@ class CFMEditorApp:
 
         # Recursively draw children if expanded
         if feature.children and self.feature_states.get(id(feature), True):
-            new_y = y + 50
+            new_y = y + 100
             for i, child in enumerate(feature.children):
                 new_x = x if len(feature.children) == 1 else x - x_offset + (
-                            i * ((2 * x_offset) // (len(feature.children) - 1)))
+                        i * ((2 * x_offset) // (len(feature.children) - 1)))
                 self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
                 self.draw_feature(child, new_x, new_y, x_offset // 2)
 
@@ -106,7 +130,6 @@ class CFMEditorApp:
         self.feature_states[id(feature)] = not self.feature_states.get(id(feature), True)
         self._draw_model()
 
-    # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
     def on_right_click_node(self, event, feature):
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="Add Child", command=lambda: self.add_feature(feature))
@@ -119,6 +142,7 @@ class CFMEditorApp:
         if feature_name:
             cardinality = simpledialog.askstring("Cardinality", "Enter cardinality (min, max):")
             if cardinality:
+                # TODO: * is also a valid upper bound
                 min_card, max_card = map(int, cardinality.split(","))
                 new_feature = Feature(name=feature_name,
                                       instance_cardinality=Cardinality([Interval(min_card, max_card)]),
