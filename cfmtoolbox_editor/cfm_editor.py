@@ -106,11 +106,14 @@ class CFMEditorApp:
         group_type_id = self.canvas.create_text(x, group_type_y, text=group_type_text,
                                                 tags=f"{feature.name}_group_type")
 
+        group_instance_text = f"<{group_instance_cardinality.lower}, {group_instance_cardinality.upper}>"
+
         # Add collapse/expand button
         if feature.children:
             expanded = self.feature_states.get(id(feature), True)
             button_text = "-" if expanded else "+"
             button_id = self.canvas.create_text(bbox[2] + 10, bbox[3], text=button_text, tags="button")
+            # Button-1 is left mouse button
             self.canvas.tag_bind(button_id, "<Button-1>", lambda event, f=feature: self.toggle_children(event, f))
 
         # Click event handling (Button-1 is left mouse button, Button-3 is right mouse button)
@@ -124,6 +127,15 @@ class CFMEditorApp:
                 new_x = x if len(feature.children) == 1 else x - x_offset + (
                         i * ((2 * x_offset) // (len(feature.children) - 1)))
                 self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
+                # TODO: Should group instance cardinality be displayed when there are no children / they aren't expanded?
+                if i == len(feature.children) - 1:
+                    # Calculate text position for group instance cardinality with linear interpolation
+                    slope = (new_x - x) / (new_y - 10 - (y + 10))
+                    group_instance_y = bbox[3] + 10
+                    group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
+                    # anchor w means west, so the left side of the text is placed at the specified position
+                    self.canvas.create_text(group_instance_x, group_instance_y, text=group_instance_text,
+                                            tags=f"{feature.name}_group_instance", anchor="w")
                 self.draw_feature(child, new_x, new_y, x_offset // 2)
 
     def toggle_children(self, event, feature):
