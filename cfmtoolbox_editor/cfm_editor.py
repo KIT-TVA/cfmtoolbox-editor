@@ -13,7 +13,7 @@ class CFMEditorApp:
         self.original_cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
-        self.feature_states = {}  # Dictionary to track expanded/collapsed state of features
+        self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
 
         self._setup_ui()
 
@@ -26,7 +26,7 @@ class CFMEditorApp:
         self.root.mainloop()
 
     def _initialize_feature_states(self, feature):
-        self.feature_states[id(feature)] = True  # Initialize all features as expanded
+        self.expanded_features[id(feature)] = True  # Initialize all features as expanded
         for child in feature.children:
             self._initialize_feature_states(child)
 
@@ -103,7 +103,7 @@ class CFMEditorApp:
 
         # Add collapse/expand button
         if feature.children:
-            expanded = self.feature_states.get(id(feature), True)
+            expanded = self.expanded_features.get(id(feature), True)
             button_text = "-" if expanded else "+"
             button_id = self.canvas.create_text(padded_bbox[2] + 10, y, text=button_text, tags="button",
                                                 font=Font(weight="bold"))
@@ -115,12 +115,26 @@ class CFMEditorApp:
         self.canvas.tag_bind(node_id, "<Button-3>", lambda event, f=feature: self.on_right_click_node(event, f))
 
         # Recursively draw children if expanded
-        if feature.children and self.feature_states.get(id(feature), True):
+        if feature.children and self.expanded_features.get(id(feature), True):
+            # Draw arc for group
+            # TODO: Only draw arc from leftmost to rightmost edge
+            arc_radius = 25
+            x_center = x
+            y_center = y + 10
+            arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
+                                            y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
+                                            start=180, extent=180)
+            self.canvas.tag_raise(group_type_id, arc_id)
+
             new_y = y + 100
             for i, child in enumerate(feature.children):
                 new_x = x if len(feature.children) == 1 else x - x_offset + (
                         i * ((2 * x_offset) // (len(feature.children) - 1)))
-                self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
+
+                edge_id = self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
+                self.canvas.tag_raise(arc_id, edge_id)
+                self.canvas.tag_raise(group_type_id, arc_id)
+
                 # TODO: Should group instance cardinality be displayed when there are no children / they aren't expanded?
                 if i == len(feature.children) - 1:
                     # Calculate text position for group instance cardinality with linear interpolation
@@ -133,7 +147,7 @@ class CFMEditorApp:
                 self.draw_feature(child, new_x, new_y, x_offset // 2)
 
     def toggle_children(self, event, feature):
-        self.feature_states[id(feature)] = not self.feature_states.get(id(feature), True)
+        self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
         self._draw_model()
 
     # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
@@ -154,7 +168,7 @@ class CFMEditorApp:
                                       instance_cardinality=Cardinality([Interval(min_card, max_card)]),
                                       group_type_cardinality=Cardinality([]),
                                       group_instance_cardinality=Cardinality([]), parent=parent, children=[])
-                self.feature_states[id(new_feature)] = True  # Initialize new feature as expanded
+                self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
                 self._draw_model()
 
