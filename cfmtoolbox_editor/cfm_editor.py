@@ -33,17 +33,6 @@ class CFMEditorApp:
         self.canvas = tk.Canvas(self.root, width=800, height=600, bg="white")
         self.canvas.pack(expand=True, fill='both')
 
-        self.menu_bar = tk.Menu(self.root)
-        self.root.config(menu=self.menu_bar)
-
-        self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Exit", command=self._exit_application)
-
-        self.model_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
-        self.menu_bar.add_cascade(label="Model", menu=self.model_menu)
-
         button_frame = tk.Frame(self.root)
         button_frame.pack(side='bottom', pady=5)
 
