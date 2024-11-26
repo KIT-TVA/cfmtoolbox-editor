@@ -2,6 +2,7 @@ import tkinter as tk
 from copy import deepcopy
 from tkinter import ttk
 from tkinter import simpledialog, Menu
+from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
 
@@ -75,11 +76,14 @@ class CFMEditorApp:
         node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
         # TODO: Add padding to the rectangle
         bbox = self.canvas.bbox(node_id)
-        rect_id = self.canvas.create_rectangle(bbox, fill="lightgrey")
+        padding_x = 4
+        padding_y = 2
+        padded_bbox = (bbox[0] - padding_x, bbox[1] - padding_y, bbox[2] + padding_x, bbox[3] + padding_y)
+        rect_id = self.canvas.create_rectangle(padded_bbox, fill="lightgrey")
         self.canvas.tag_raise(node_id, rect_id)
 
         # bbox[1] is the y-coordinate of the top side of the box
-        feature_instance_y = bbox[1] - 10
+        feature_instance_y = padded_bbox[1] - 10
         feature_instance_x = x - 20
         # TODO: The brackets don't look nice
         # TODO: Position on right of arrow for children on the right and central for root
@@ -90,7 +94,7 @@ class CFMEditorApp:
 
         # TODO: Add half circle for group
         # bbox[3] is the y-coordinate of the bottom of the text box
-        group_type_y = bbox[3] + 10
+        group_type_y = padded_bbox[3] + 10
         group_type_text = f"[{group_type_cardinality.lower}, {group_type_cardinality.upper}]"
         group_type_id = self.canvas.create_text(x, group_type_y, text=group_type_text,
                                                 tags=f"{feature.name}_group_type")
@@ -101,7 +105,8 @@ class CFMEditorApp:
         if feature.children:
             expanded = self.feature_states.get(id(feature), True)
             button_text = "-" if expanded else "+"
-            button_id = self.canvas.create_text(bbox[2] + 10, bbox[3], text=button_text, tags="button")
+            button_id = self.canvas.create_text(padded_bbox[2] + 10, y, text=button_text, tags="button",
+                                                font=Font(weight="bold"))
             # Button-1 is left mouse button
             self.canvas.tag_bind(button_id, "<Button-1>", lambda event, f=feature: self.toggle_children(event, f))
 
@@ -120,7 +125,7 @@ class CFMEditorApp:
                 if i == len(feature.children) - 1:
                     # Calculate text position for group instance cardinality with linear interpolation
                     slope = (new_x - x) / (new_y - 10 - (y + 10))
-                    group_instance_y = bbox[3] + 10
+                    group_instance_y = padded_bbox[3] + 10
                     group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
                     # anchor w means west, so the left side of the text is placed at the specified position
                     self.canvas.create_text(group_instance_x, group_instance_y, text=group_instance_text,
