@@ -130,6 +130,7 @@ class CFMEditorApp:
         self.feature_states[id(feature)] = not self.feature_states.get(id(feature), True)
         self._draw_model()
 
+    # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
     def on_right_click_node(self, event, feature):
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="Add Child", command=lambda: self.add_feature(feature))
@@ -142,7 +143,6 @@ class CFMEditorApp:
         if feature_name:
             cardinality = simpledialog.askstring("Cardinality", "Enter cardinality (min, max):")
             if cardinality:
-                # TODO: * is also a valid upper bound
                 min_card, max_card = map(int, cardinality.split(","))
                 new_feature = Feature(name=feature_name,
                                       instance_cardinality=Cardinality([Interval(min_card, max_card)]),
