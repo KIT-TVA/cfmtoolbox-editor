@@ -62,10 +62,10 @@ class CFMEditorApp:
     # TODO: Calculate more suitable feature positions
     def _draw_model(self):
         self.canvas.delete("all")
-        self.draw_feature(self.cfm.root, 400, 50)
+        self.draw_feature(self.cfm.root, "middle", 400, 50)
 
     # TODO: Refactor this method as it became too long
-    def draw_feature(self, feature: Feature, x: int, y: int, x_offset: int = 200):
+    def draw_feature(self, feature: Feature, feature_instance_card_pos: str, x: int, y: int, x_offset: int = 200):
         # TODO: Handle multiple intervals
         # TODO: First check if intervals exist
         feature_instance_cardinality = feature.instance_cardinality.intervals[
@@ -84,14 +84,23 @@ class CFMEditorApp:
         self.canvas.tag_raise(node_id, rect_id)
 
         # bbox[1] is the y-coordinate of the top side of the box
+        match feature_instance_card_pos:
+            case "right":
+                anchor = tk.W
+                feature_instance_x = x + 4
+            case "left":
+                anchor = tk.E
+                feature_instance_x = x - 4
+            case _:
+                anchor = tk.CENTER
+                feature_instance_x = x
+
         feature_instance_y = padded_bbox[1] - 10
-        feature_instance_x = x - 20
         # TODO: The brackets don't look nice
-        # TODO: Position on right of arrow for children on the right and central for root
         feature_instance_text = f"<{feature_instance_cardinality.lower}, {feature_instance_cardinality.upper}>"
         feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
                                                       text=feature_instance_text,
-                                                      tags=f"{feature.name}_feature_instance")
+                                                      tags=f"{feature.name}_feature_instance", anchor=anchor)
 
         # bbox[3] is the y-coordinate of the bottom of the text box
         group_type_y = padded_bbox[3] + 10
@@ -143,8 +152,9 @@ class CFMEditorApp:
                     group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
                     # anchor w means west, so the left side of the text is placed at the specified position
                     self.canvas.create_text(group_instance_x, group_instance_y, text=group_instance_text,
-                                            tags=f"{feature.name}_group_instance", anchor="w")
-                self.draw_feature(child, new_x, new_y, x_offset // 2)
+                                            tags=f"{feature.name}_group_instance", anchor=tk.W)
+                child_feature_instance_card_pos = "right" if new_x >= x else "left"
+                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, x_offset // 2)
 
             arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
                                             y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
