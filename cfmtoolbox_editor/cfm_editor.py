@@ -1,3 +1,4 @@
+from math import atan2, degrees
 import tkinter as tk
 from copy import deepcopy
 from tkinter import ttk
@@ -63,6 +64,7 @@ class CFMEditorApp:
         self.canvas.delete("all")
         self.draw_feature(self.cfm.root, 400, 50)
 
+    # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, x: int, y: int, x_offset: int = 200):
         # TODO: Handle multiple intervals
         # TODO: First check if intervals exist
@@ -74,7 +76,6 @@ class CFMEditorApp:
             0] if feature.group_instance_cardinality.intervals else Interval(0, 0)
 
         node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
-        # TODO: Add padding to the rectangle
         bbox = self.canvas.bbox(node_id)
         padding_x = 4
         padding_y = 2
@@ -92,7 +93,6 @@ class CFMEditorApp:
                                                       text=feature_instance_text,
                                                       tags=f"{feature.name}_feature_instance")
 
-        # TODO: Add half circle for group
         # bbox[3] is the y-coordinate of the bottom of the text box
         group_type_y = padded_bbox[3] + 10
         group_type_text = f"[{group_type_cardinality.lower}, {group_type_cardinality.upper}]"
@@ -116,27 +116,27 @@ class CFMEditorApp:
 
         # Recursively draw children if expanded
         if feature.children and self.expanded_features.get(id(feature), True):
-            # Draw arc for group
-            # TODO: Only draw arc from leftmost to rightmost edge
+            # arc for group
+            # TODO: What if there are no or only one child(ren)
             arc_radius = 25
             x_center = x
             y_center = y + 10
-            arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
-                                            y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
-                                            start=180, extent=180)
-            self.canvas.tag_raise(group_type_id, arc_id)
+            left_angle = 180
+            right_angle = 360
 
             new_y = y + 100
             for i, child in enumerate(feature.children):
                 new_x = x if len(feature.children) == 1 else x - x_offset + (
                         i * ((2 * x_offset) // (len(feature.children) - 1)))
-
                 edge_id = self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
-                self.canvas.tag_raise(arc_id, edge_id)
-                self.canvas.tag_raise(group_type_id, arc_id)
 
-                # TODO: Should group instance cardinality be displayed when there are no children / they aren't expanded?
+                # Calculate angles for the group arc and adjust to canvas coordinate system
+                if i == 0:
+                    left_angle = (degrees(atan2((new_y - y_center), (new_x - x_center))) + 180) % 360
                 if i == len(feature.children) - 1:
+                    right_angle = (degrees(atan2((new_y - y_center), (new_x - x_center))) + 180) % 360
+
+                    # TODO: Should group instance cardinality be displayed when there are no children / they aren't expanded?
                     # Calculate text position for group instance cardinality with linear interpolation
                     slope = (new_x - x) / (new_y - 10 - (y + 10))
                     group_instance_y = padded_bbox[3] + 10
@@ -146,11 +146,15 @@ class CFMEditorApp:
                                             tags=f"{feature.name}_group_instance", anchor="w")
                 self.draw_feature(child, new_x, new_y, x_offset // 2)
 
+            arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
+                                            y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
+                                            start=left_angle, extent=right_angle - left_angle)
+            self.canvas.tag_raise(group_type_id, arc_id)
+
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
         self._draw_model()
 
-    # TODO: Can we make the nodes actually clickable? (bind this to the nodes)
     def on_right_click_node(self, event, feature):
         menu = Menu(self.root, tearoff=0)
         menu.add_command(label="Add Child", command=lambda: self.add_feature(feature))
