@@ -162,6 +162,19 @@ class CFMEditorApp:
         menu.post(event.x_root, event.y_root)
 
     def add_feature(self, parent):
+        self.show_feature_dialog(parent=parent)
+
+    def edit_feature(self, feature):
+        self.show_feature_dialog(feature=feature)
+
+    def delete_feature(self, feature):
+        self.cfm.features.remove(feature)
+        if feature.parent:
+            feature.parent.children.remove(feature)
+        self._draw_model()
+
+    # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
+    def show_feature_dialog(self, parent=None, feature=None):
         def on_submit():
             feature_name = name_var.get().strip()
             # TODO: Check if the feature name is unique
@@ -183,29 +196,40 @@ class CFMEditorApp:
                                          "Invalid cardinality format. Use 'min,max' or 'min,*' for intervals.")
                     return
 
-            new_feature = Feature(
-                name=feature_name,
-                instance_cardinality=Cardinality(intervals),
-                group_type_cardinality=Cardinality([]),
-                group_instance_cardinality=Cardinality([]),
-                parent=parent,
-                children=[]
-            )
-            self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
-            parent.children.append(new_feature)
+            if feature:
+                feature.name = feature_name
+                feature.instance_cardinality = Cardinality(intervals)
+            else:
+                new_feature = Feature(
+                    name=feature_name,
+                    instance_cardinality=Cardinality(intervals),
+                    group_type_cardinality=Cardinality([]),
+                    group_instance_cardinality=Cardinality([]),
+                    parent=parent,
+                    children=[]
+                )
+                self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
+                parent.children.append(new_feature)
+
             self._draw_model()
             dialog.destroy()
 
         dialog = Toplevel(self.root)
         dialog.withdraw()
-        dialog.title("Add Feature")
+        dialog.title("Edit Feature" if feature else "Add Feature")
+
+        current_name = feature.name if feature else ""
+        current_cardinality = "; ".join(
+            f"{interval.lower},{'*' if interval.upper is None else interval.upper}"
+            for interval in (feature.instance_cardinality.intervals if feature else [])
+        )
 
         Label(dialog, text="Feature Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        name_var = StringVar()
+        name_var = StringVar(value=current_name)
         Entry(dialog, textvariable=name_var).grid(row=0, column=1, padx=5, pady=5)
 
         Label(dialog, text="Cardinality (e.g., '1,2; 5,*'):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        cardinality_var = StringVar()
+        cardinality_var = StringVar(value=current_cardinality)
         Entry(dialog, textvariable=cardinality_var).grid(row=1, column=1, padx=5, pady=5)
 
         Button(dialog, text="Submit", command=on_submit).grid(row=2, column=0, columnspan=2, pady=10)
@@ -226,20 +250,3 @@ class CFMEditorApp:
         dialog.transient(self.root)
         dialog.grab_set()
         dialog.wait_window()
-
-    def edit_feature(self, feature):
-        new_name = simpledialog.askstring("Edit Feature", f"Edit feature name ({feature.name}):")
-        if new_name:
-            cardinality = simpledialog.askstring("Cardinality", "Enter cardinality (min, max):")
-            if cardinality:
-                min_card, max_card = map(int, cardinality.split(","))
-                # Update the feature name and cardinality
-                feature.name = new_name
-                feature.instance_cardinality = Cardinality([Interval(min_card, max_card)])
-                self._draw_model()
-
-    def delete_feature(self, feature):
-        self.cfm.features.remove(feature)
-        if feature.parent:
-            feature.parent.children.remove(feature)
-        self._draw_model()
