@@ -7,6 +7,8 @@ from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
 
+from cfmtoolbox_editor.utils import cardinality_to_str
+
 
 class CFMEditorApp:
     def __init__(self):
@@ -66,15 +68,6 @@ class CFMEditorApp:
 
     # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str, x: int, y: int, x_offset: int = 200):
-        # TODO: Handle multiple intervals
-        # TODO: First check if intervals exist
-        feature_instance_cardinality = feature.instance_cardinality.intervals[
-            0] if feature.instance_cardinality.intervals else Interval(0, 0)
-        group_type_cardinality = feature.group_type_cardinality.intervals[
-            0] if feature.group_type_cardinality.intervals else Interval(0, 0)
-        group_instance_cardinality = feature.group_instance_cardinality.intervals[
-            0] if feature.group_instance_cardinality.intervals else Interval(0, 0)
-
         node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
         bbox = self.canvas.bbox(node_id)
         padding_x = 4
@@ -97,18 +90,15 @@ class CFMEditorApp:
 
         feature_instance_y = padded_bbox[1] - 10
         # TODO: The brackets don't look nice
-        feature_instance_text = f"<{feature_instance_cardinality.lower}, {feature_instance_cardinality.upper}>"
         feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
-                                                      text=feature_instance_text,
+                                                      text=cardinality_to_str(feature.instance_cardinality, "<", ">"),
                                                       tags=f"{feature.name}_feature_instance", anchor=anchor)
 
         # bbox[3] is the y-coordinate of the bottom of the text box
         group_type_y = padded_bbox[3] + 10
-        group_type_text = f"[{group_type_cardinality.lower}, {group_type_cardinality.upper}]"
-        group_type_id = self.canvas.create_text(x, group_type_y, text=group_type_text,
+        group_type_id = self.canvas.create_text(x, group_type_y,
+                                                text=cardinality_to_str(feature.group_type_cardinality, "[", "]"),
                                                 tags=f"{feature.name}_group_type")
-
-        group_instance_text = f"<{group_instance_cardinality.lower}, {group_instance_cardinality.upper}>"
 
         # Add collapse/expand button
         if feature.children:
@@ -120,7 +110,6 @@ class CFMEditorApp:
             self.canvas.tag_bind(button_id, "<Button-1>", lambda event, f=feature: self.toggle_children(event, f))
 
         # Click event handling (Button-1 is left mouse button, Button-3 is right mouse button)
-        # self.canvas.tag_bind(node_id, "<Button-1>", lambda event, f=feature: self.on_left_click_node(event, f))
         self.canvas.tag_bind(node_id, "<Button-3>", lambda event, f=feature: self.on_right_click_node(event, f))
 
         # Recursively draw children if expanded
@@ -151,10 +140,11 @@ class CFMEditorApp:
                     group_instance_y = padded_bbox[3] + 10
                     group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
                     # anchor w means west, so the left side of the text is placed at the specified position
-                    self.canvas.create_text(group_instance_x, group_instance_y, text=group_instance_text,
+                    self.canvas.create_text(group_instance_x, group_instance_y,
+                                            text=cardinality_to_str(feature.group_instance_cardinality, "<", ">"),
                                             tags=f"{feature.name}_group_instance", anchor=tk.W)
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
-                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, x_offset // 2)
+                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, round(x_offset / 3))
 
             arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
                                             y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
