@@ -1,8 +1,7 @@
 from math import atan2, degrees
 import tkinter as tk
 from copy import deepcopy
-from tkinter import ttk
-from tkinter import simpledialog, Menu
+from tkinter import simpledialog, Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
@@ -144,7 +143,7 @@ class CFMEditorApp:
                                             text=cardinality_to_str(feature.group_instance_cardinality, "<", ">"),
                                             tags=f"{feature.name}_group_instance", anchor=tk.W)
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
-                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, round(x_offset / 3))
+                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, round(x_offset / 3.5))
 
             arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
                                             y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
@@ -163,18 +162,70 @@ class CFMEditorApp:
         menu.post(event.x_root, event.y_root)
 
     def add_feature(self, parent):
-        feature_name = simpledialog.askstring("Feature Name", "Enter feature name:")
-        if feature_name:
-            cardinality = simpledialog.askstring("Cardinality", "Enter cardinality (min, max):")
-            if cardinality:
-                min_card, max_card = map(int, cardinality.split(","))
-                new_feature = Feature(name=feature_name,
-                                      instance_cardinality=Cardinality([Interval(min_card, max_card)]),
-                                      group_type_cardinality=Cardinality([]),
-                                      group_instance_cardinality=Cardinality([]), parent=parent, children=[])
-                self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
-                parent.children.append(new_feature)
-                self._draw_model()
+        def on_submit():
+            feature_name = name_var.get().strip()
+            # TODO: Check if the feature name is unique
+            if not feature_name:
+                messagebox.showerror("Input Error", "Feature name cannot be empty.")
+                return
+
+            raw_cardinality = cardinality_var.get().strip()
+            intervals = []
+            if raw_cardinality:
+                try:
+                    for interval in raw_cardinality.split(";"):
+                        min_card, max_card = interval.split(",")
+                        min_card = int(min_card.strip())
+                        max_card = None if max_card.strip() == "*" else int(max_card.strip())
+                        intervals.append(Interval(min_card, max_card))
+                except ValueError:
+                    messagebox.showerror("Input Error",
+                                         "Invalid cardinality format. Use 'min,max' or 'min,*' for intervals.")
+                    return
+
+            new_feature = Feature(
+                name=feature_name,
+                instance_cardinality=Cardinality(intervals),
+                group_type_cardinality=Cardinality([]),
+                group_instance_cardinality=Cardinality([]),
+                parent=parent,
+                children=[]
+            )
+            self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
+            parent.children.append(new_feature)
+            self._draw_model()
+            dialog.destroy()
+
+        dialog = Toplevel(self.root)
+        dialog.withdraw()
+        dialog.title("Add Feature")
+
+        Label(dialog, text="Feature Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        name_var = StringVar()
+        Entry(dialog, textvariable=name_var).grid(row=0, column=1, padx=5, pady=5)
+
+        Label(dialog, text="Cardinality (e.g., '1,2; 5,*'):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        cardinality_var = StringVar()
+        Entry(dialog, textvariable=cardinality_var).grid(row=1, column=1, padx=5, pady=5)
+
+        Button(dialog, text="Submit", command=on_submit).grid(row=2, column=0, columnspan=2, pady=10)
+
+        # Center the dialog window
+        self.root.update_idletasks()
+        main_window_x = self.root.winfo_x()
+        main_window_y = self.root.winfo_y()
+        main_window_width = self.root.winfo_width()
+        main_window_height = self.root.winfo_height()
+
+        dialog_x = main_window_x + (main_window_width // 2) - (dialog.winfo_reqwidth() // 2)
+        dialog_y = main_window_y + (main_window_height // 2) - (dialog.winfo_reqheight() // 2)
+
+        dialog.geometry(f"+{dialog_x}+{dialog_y}")
+
+        dialog.deiconify()
+        dialog.transient(self.root)
+        dialog.grab_set()
+        dialog.wait_window()
 
     def edit_feature(self, feature):
         new_name = simpledialog.askstring("Edit Feature", f"Edit feature name ({feature.name}):")
