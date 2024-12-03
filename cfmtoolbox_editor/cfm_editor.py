@@ -1,7 +1,7 @@
 from math import atan2, degrees
 import tkinter as tk
 from copy import deepcopy
-from tkinter import simpledialog, Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
+from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
@@ -142,8 +142,8 @@ class CFMEditorApp:
 
             if len(feature.children) > 1:
                 arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
-                                            y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
-                                            start=left_angle, extent=right_angle - left_angle)
+                                                y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
+                                                start=left_angle, extent=right_angle - left_angle)
                 # bbox[3] is the y-coordinate of the bottom of the text box
                 group_type_y = padded_bbox[3] + 10
                 group_type_id = self.canvas.create_text(x, group_type_y,
@@ -211,6 +211,11 @@ class CFMEditorApp:
                 )
                 self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
+                if len(parent.children) == 1:
+                    lower_group_type = 0 if any(interval.lower == 0 for interval in intervals) else 1
+                    parent.group_type_cardinality = Cardinality([Interval(lower_group_type, 1)])
+                    parent.group_instance_cardinality = Cardinality(intervals)
+                # TODO: What happens for second child?
 
             self._draw_model()
             dialog.destroy()
