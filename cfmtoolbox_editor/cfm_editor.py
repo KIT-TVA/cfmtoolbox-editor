@@ -87,17 +87,13 @@ class CFMEditorApp:
                 anchor = tk.CENTER
                 feature_instance_x = x
 
-        feature_instance_y = padded_bbox[1] - 10
-        # TODO: The brackets don't look nice
-        feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
-                                                      text=cardinality_to_str(feature.instance_cardinality, "<", ">"),
-                                                      tags=f"{feature.name}_feature_instance", anchor=anchor)
-
-        # bbox[3] is the y-coordinate of the bottom of the text box
-        group_type_y = padded_bbox[3] + 10
-        group_type_id = self.canvas.create_text(x, group_type_y,
-                                                text=cardinality_to_str(feature.group_type_cardinality, "[", "]"),
-                                                tags=f"{feature.name}_group_type")
+        if not feature == self.cfm.root:
+            feature_instance_y = padded_bbox[1] - 10
+            # TODO: The brackets don't look nice
+            feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
+                                                          text=cardinality_to_str(feature.instance_cardinality, "<",
+                                                                                  ">"),
+                                                          tags=f"{feature.name}_feature_instance", anchor=anchor)
 
         # Add collapse/expand button
         if feature.children:
@@ -114,7 +110,6 @@ class CFMEditorApp:
         # Recursively draw children if expanded
         if feature.children and self.expanded_features.get(id(feature), True):
             # arc for group
-            # TODO: What if there are no or only one child(ren)
             arc_radius = 25
             x_center = x
             y_center = y + 10
@@ -130,10 +125,9 @@ class CFMEditorApp:
                 # Calculate angles for the group arc and adjust to canvas coordinate system
                 if i == 0:
                     left_angle = (degrees(atan2((new_y - y_center), (new_x - x_center))) + 180) % 360
-                if i == len(feature.children) - 1:
+                if (i == len(feature.children) - 1) and (len(feature.children) > 1):
                     right_angle = (degrees(atan2((new_y - y_center), (new_x - x_center))) + 180) % 360
 
-                    # TODO: Should group instance cardinality be displayed when there are no children / they aren't expanded?
                     # Calculate text position for group instance cardinality with linear interpolation
                     slope = (new_x - x) / (new_y - 10 - (y + 10))
                     group_instance_y = padded_bbox[3] + 10
@@ -142,13 +136,20 @@ class CFMEditorApp:
                     self.canvas.create_text(group_instance_x, group_instance_y,
                                             text=cardinality_to_str(feature.group_instance_cardinality, "<", ">"),
                                             tags=f"{feature.name}_group_instance", anchor=tk.W)
+
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
                 self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, round(x_offset / 3.5))
 
-            arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
+            if len(feature.children) > 1:
+                arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
                                             y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
                                             start=left_angle, extent=right_angle - left_angle)
-            self.canvas.tag_raise(group_type_id, arc_id)
+                # bbox[3] is the y-coordinate of the bottom of the text box
+                group_type_y = padded_bbox[3] + 10
+                group_type_id = self.canvas.create_text(x, group_type_y,
+                                                        text=cardinality_to_str(feature.group_type_cardinality, "[",
+                                                                                "]"),
+                                                        tags=f"{feature.name}_group_type")
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
