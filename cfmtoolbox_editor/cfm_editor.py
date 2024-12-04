@@ -6,7 +6,7 @@ from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
 
-from cfmtoolbox_editor.utils import cardinality_to_str
+from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str
 
 
 class CFMEditorApp:
@@ -91,8 +91,9 @@ class CFMEditorApp:
             feature_instance_y = padded_bbox[1] - 10
             # TODO: The brackets don't look nice
             feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
-                                                          text=cardinality_to_str(feature.instance_cardinality, "<",
-                                                                                  ">"),
+                                                          text=cardinality_to_display_str(feature.instance_cardinality,
+                                                                                          "<",
+                                                                                          ">"),
                                                           tags=f"{feature.name}_feature_instance", anchor=anchor)
 
         # Add collapse/expand button
@@ -134,7 +135,8 @@ class CFMEditorApp:
                     group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
                     # anchor w means west, so the left side of the text is placed at the specified position
                     self.canvas.create_text(group_instance_x, group_instance_y,
-                                            text=cardinality_to_str(feature.group_instance_cardinality, "<", ">"),
+                                            text=cardinality_to_display_str(feature.group_instance_cardinality, "<",
+                                                                            ">"),
                                             tags=f"{feature.name}_group_instance", anchor=tk.W)
 
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
@@ -147,8 +149,9 @@ class CFMEditorApp:
                 # bbox[3] is the y-coordinate of the bottom of the text box
                 group_type_y = padded_bbox[3] + 10
                 group_type_id = self.canvas.create_text(x, group_type_y,
-                                                        text=cardinality_to_str(feature.group_type_cardinality, "[",
-                                                                                "]"),
+                                                        text=cardinality_to_display_str(feature.group_type_cardinality,
+                                                                                        "[",
+                                                                                        "]"),
                                                         tags=f"{feature.name}_group_type")
 
     def toggle_children(self, event, feature):
@@ -175,7 +178,7 @@ class CFMEditorApp:
         self._draw_model()
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
-    def show_feature_dialog(self, parent=None, feature=None):
+    def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
         def on_submit():
             feature_name = name_var.get().strip()
             # TODO: Check if the feature name is unique
@@ -183,27 +186,40 @@ class CFMEditorApp:
                 messagebox.showerror("Input Error", "Feature name cannot be empty.")
                 return
 
-            raw_cardinality = cardinality_var.get().strip()
-            intervals = []
-            if raw_cardinality:
+            raw_feature_card = feature_card_var.get().strip()
+            feature_card = Cardinality([Interval(0, None)])
+            if raw_feature_card:
                 try:
-                    for interval in raw_cardinality.split(";"):
-                        min_card, max_card = interval.split(",")
-                        min_card = int(min_card.strip())
-                        max_card = None if max_card.strip() == "*" else int(max_card.strip())
-                        intervals.append(Interval(min_card, max_card))
+                    feature_card = edit_str_to_cardinality(raw_feature_card)
                 except ValueError:
                     messagebox.showerror("Input Error",
-                                         "Invalid cardinality format. Use 'min,max' or 'min,*' for intervals.")
+                                         "Invalid feature cardinality format. Use 'min,max' or 'min,*' for intervals.")
                     return
 
-            if feature:
+            if is_edit:
                 feature.name = feature_name
-                feature.instance_cardinality = Cardinality(intervals)
+                feature.instance_cardinality = feature_card
+                if is_group:
+                    raw_group_type_card = group_type_card_var.get().strip()
+                    raw_group_instance_card = group_instance_card_var.get().strip()
+                    try:
+                        group_type_card = edit_str_to_cardinality(raw_group_type_card)
+                    except ValueError:
+                        messagebox.showerror("Input Error",
+                                             "Invalid group type cardinality format. Use 'min,max' or 'min,*' for intervals.")
+                        return
+                    try:
+                        group_instance_card = edit_str_to_cardinality(raw_group_instance_card)
+                    except ValueError:
+                        messagebox.showerror("Input Error",
+                                             "Invalid group instance cardinality format. Use 'min,max' or 'min,*' for intervals.")
+                        return
+                    feature.group_type_cardinality = group_type_card
+                    feature.group_instance_cardinality = group_instance_card
             else:
                 new_feature = Feature(
                     name=feature_name,
-                    instance_cardinality=Cardinality(intervals),
+                    instance_cardinality=feature_card,
                     group_type_cardinality=Cardinality([]),
                     group_instance_cardinality=Cardinality([]),
                     parent=parent,
@@ -212,9 +228,9 @@ class CFMEditorApp:
                 self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
                 if len(parent.children) == 1:
-                    lower_group_type = 0 if any(interval.lower == 0 for interval in intervals) else 1
+                    lower_group_type = 0 if any(interval.lower == 0 for interval in feature_card.intervals) else 1
                     parent.group_type_cardinality = Cardinality([Interval(lower_group_type, 1)])
-                    parent.group_instance_cardinality = Cardinality(intervals)
+                    parent.group_instance_cardinality = Cardinality(feature_card.intervals)
                 # TODO: What happens for second child?
 
             self._draw_model()
@@ -224,21 +240,34 @@ class CFMEditorApp:
         dialog.withdraw()
         dialog.title("Edit Feature" if feature else "Add Feature")
 
-        current_name = feature.name if feature else ""
-        current_cardinality = "; ".join(
-            f"{interval.lower},{'*' if interval.upper is None else interval.upper}"
-            for interval in (feature.instance_cardinality.intervals if feature else [])
-        )
+        is_edit = feature is not None
+        is_group = is_edit and len(feature.children) > 1
+
+        current_name = feature.name if is_edit else ""
+        current_feature_card = cardinality_to_edit_str(feature.instance_cardinality) if is_edit else ""
 
         Label(dialog, text="Feature Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         name_var = StringVar(value=current_name)
         Entry(dialog, textvariable=name_var).grid(row=0, column=1, padx=5, pady=5)
 
-        Label(dialog, text="Cardinality (e.g., '1,2; 5,*'):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        cardinality_var = StringVar(value=current_cardinality)
-        Entry(dialog, textvariable=cardinality_var).grid(row=1, column=1, padx=5, pady=5)
+        Label(dialog, text="Feature cardinality (e.g., '1,2; 5,*'):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        feature_card_var = StringVar(value=current_feature_card)
+        Entry(dialog, textvariable=feature_card_var).grid(row=1, column=1, padx=5, pady=5)
 
-        Button(dialog, text="Submit", command=on_submit).grid(row=2, column=0, columnspan=2, pady=10)
+        if is_group:
+            current_group_type_card = cardinality_to_edit_str(feature.group_type_cardinality)
+            current_group_instance_card = cardinality_to_edit_str(feature.group_instance_cardinality)
+
+            Label(dialog, text="Group type cardinality:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+            group_type_card_var = StringVar(value=current_group_type_card)
+            Entry(dialog, textvariable=group_type_card_var).grid(row=2, column=1, padx=5, pady=5)
+
+            Label(dialog, text="Group instance cardinality:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
+            group_instance_card_var = StringVar(value=current_group_instance_card)
+            Entry(dialog, textvariable=group_instance_card_var).grid(row=3, column=1, padx=5, pady=5)
+
+        Button(dialog, text="Save changes" if is_edit else "Add", command=on_submit).grid(row=4, column=0, columnspan=2,
+                                                                                          pady=10)
 
         # Center the dialog window
         self.root.update_idletasks()
