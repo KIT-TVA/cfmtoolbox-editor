@@ -181,9 +181,12 @@ class CFMEditorApp:
     def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
         def on_submit():
             feature_name = name_var.get().strip()
-            # TODO: Check if the feature name is unique
             if not feature_name:
                 messagebox.showerror("Input Error", "Feature name cannot be empty.")
+                return
+            if (feature_name in [f.name for f in self.cfm.features]) and (
+                    not is_edit or (feature_name != feature.name)):
+                messagebox.showerror("Input Error", "Feature name must be unique.")
                 return
 
             raw_feature_card = feature_card_var.get().strip()
@@ -231,7 +234,7 @@ class CFMEditorApp:
                     lower_group_type = 0 if any(interval.lower == 0 for interval in feature_card.intervals) else 1
                     parent.group_type_cardinality = Cardinality([Interval(lower_group_type, 1)])
                     parent.group_instance_cardinality = Cardinality(feature_card.intervals)
-                # TODO: What happens for second child?
+                # TODO: What happens for second child? -> Ask for group cardinalities
 
             self._draw_model()
             dialog.destroy()
