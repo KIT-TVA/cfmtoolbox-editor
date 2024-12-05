@@ -45,3 +45,15 @@ def edit_str_to_cardinality(raw_cardinality: str) -> Cardinality:
         max_card = None if max_card.strip() == "*" else int(max_card.strip())
         intervals.append(Interval(min_card, max_card))
     return Cardinality(intervals)
+
+
+def derive_parent_group_cardinalities(child_instance_card: Cardinality) -> (Cardinality, Cardinality):
+    """
+    Derives the parent group cardinalities from the only child's instance cardinality. Group type cardinality is 0 if
+    the child can have 0 instances, 1 otherwise. Group instance cardinality is the same as the child's instance
+    cardinality.
+    :param child_instance_card: The feature instance cardinality of a child with no siblings
+    :return: (Group type cardinality, Group instance cardinality) of the parent group
+    """
+    lower_group_type = 0 if any(interval.lower == 0 for interval in child_instance_card.intervals) else 1
+    return Cardinality([Interval(lower_group_type, 1)]), Cardinality(child_instance_card.intervals)

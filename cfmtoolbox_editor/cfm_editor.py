@@ -6,7 +6,8 @@ from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature
 
-from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str
+from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
+    derive_parent_group_cardinalities
 
 
 class CFMEditorApp:
@@ -175,6 +176,13 @@ class CFMEditorApp:
         self.cfm.features.remove(feature)
         if feature.parent:
             feature.parent.children.remove(feature)
+            if len(feature.parent.children) == 1:
+                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cardinalities(
+                    feature.parent.children[0].instance_cardinality)
+            if len(feature.parent.children) == 0:
+                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = Cardinality(
+                    []), Cardinality([])
+
         self._draw_model()
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
@@ -231,9 +239,8 @@ class CFMEditorApp:
                 self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
                 if len(parent.children) == 1:
-                    lower_group_type = 0 if any(interval.lower == 0 for interval in feature_card.intervals) else 1
-                    parent.group_type_cardinality = Cardinality([Interval(lower_group_type, 1)])
-                    parent.group_instance_cardinality = Cardinality(feature_card.intervals)
+                    parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cardinalities(
+                        feature_card)
                 # TODO: What happens for second child? -> Ask for group cardinalities
 
             self._draw_model()
