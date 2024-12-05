@@ -7,7 +7,7 @@ from tkinter.font import Font
 from cfmtoolbox import Cardinality, Interval, Feature
 
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
-    derive_parent_group_cardinalities
+    derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
 
 
 class CFMEditorApp:
@@ -177,7 +177,7 @@ class CFMEditorApp:
         if feature.parent:
             feature.parent.children.remove(feature)
             if len(feature.parent.children) == 1:
-                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cardinalities(
+                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
                     feature.parent.children[0].instance_cardinality)
             if len(feature.parent.children) == 0:
                 feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = Cardinality(
@@ -206,6 +206,8 @@ class CFMEditorApp:
                     messagebox.showerror("Input Error",
                                          "Invalid feature cardinality format. Use 'min,max' or 'min,*' for intervals.")
                     return
+
+            group_created = False
 
             if is_edit:
                 feature.name = feature_name
@@ -239,12 +241,19 @@ class CFMEditorApp:
                 self.expanded_features[id(new_feature)] = True  # Initialize new feature as expanded
                 parent.children.append(new_feature)
                 if len(parent.children) == 1:
-                    parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cardinalities(
+                    parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
                         feature_card)
-                # TODO: What happens for second child? -> Ask for group cardinalities
+                if len(parent.children) == 2:
+                    group_created = True
+                    parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_multiple_children(
+                        [child.instance_cardinality for child in parent.children])
 
             self._draw_model()
             dialog.destroy()
+            if group_created:
+                messagebox.showinfo("Group Created",
+                                    "A new group was created. You can edit its cardinalities now.")
+                self.show_feature_dialog(feature=parent)
 
         dialog = Toplevel(self.root)
         dialog.withdraw()

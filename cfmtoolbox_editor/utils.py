@@ -47,7 +47,7 @@ def edit_str_to_cardinality(raw_cardinality: str) -> Cardinality:
     return Cardinality(intervals)
 
 
-def derive_parent_group_cardinalities(child_instance_card: Cardinality) -> (Cardinality, Cardinality):
+def derive_parent_group_cards_for_one_child(child_instance_card: Cardinality) -> (Cardinality, Cardinality):
     """
     Derives the parent group cardinalities from the only child's instance cardinality. Group type cardinality is 0 if
     the child can have 0 instances, 1 otherwise. Group instance cardinality is the same as the child's instance
@@ -57,3 +57,23 @@ def derive_parent_group_cardinalities(child_instance_card: Cardinality) -> (Card
     """
     lower_group_type = 0 if any(interval.lower == 0 for interval in child_instance_card.intervals) else 1
     return Cardinality([Interval(lower_group_type, 1)]), Cardinality(child_instance_card.intervals)
+
+
+def derive_parent_group_cards_for_multiple_children(child_instance_cards: [Cardinality]) -> (Cardinality, Cardinality):
+    """
+    Derives the parent group cardinalities from the instance cardinalities of multiple children. Group type cardinality
+    is [mandatory children, all children]. Group instance cardinality is <sum of minimum lower bounds, sum of maximum
+    upper bounds> of the children.
+    :param child_instance_cards: The feature instance cardinalities of the children
+    :return: (Group type cardinality, Group instance cardinality) of the parent group
+    """
+    lower_group_type = len(
+        [card for card in child_instance_cards if not any(interval.lower == 0 for interval in card.intervals)])
+    upper_group_type = len(child_instance_cards)
+    lower_group_instance = sum(
+        min(interval.lower for interval in card.intervals) for card in child_instance_cards if card.intervals)
+    upper_group_instance = None if any(
+        interval.upper is None for card in child_instance_cards for interval in card.intervals) else sum(
+        max(interval.upper for interval in card.intervals) for card in child_instance_cards if card.intervals)
+    return (Cardinality([Interval(lower_group_type, upper_group_type)]),
+            Cardinality([Interval(lower_group_instance, upper_group_instance)]))
