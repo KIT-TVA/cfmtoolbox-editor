@@ -229,6 +229,10 @@ class CFMEditorApp:
                         return
                     feature.group_type_cardinality = group_type_card
                     feature.group_instance_cardinality = group_instance_card
+                if is_only_child:
+                    feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
+                        feature.instance_cardinality)
+
             else:
                 new_feature = Feature(
                     name=feature_name,
@@ -261,6 +265,7 @@ class CFMEditorApp:
 
         is_edit = feature is not None
         is_group = is_edit and len(feature.children) > 1
+        is_only_child = is_edit and len(feature.parent.children) == 1
 
         current_name = feature.name if is_edit else ""
         current_feature_card = cardinality_to_edit_str(feature.instance_cardinality) if is_edit else ""
