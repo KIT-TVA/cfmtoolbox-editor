@@ -173,6 +173,8 @@ class CFMEditorApp:
         self.show_feature_dialog(feature=feature)
 
     def delete_feature(self, feature):
+        is_cascading = self.ask_delete_method(feature.name)
+        # TODO: cascade or transfer
         self.cfm.features.remove(feature)
         if feature.parent:
             feature.parent.children.remove(feature)
@@ -184,6 +186,39 @@ class CFMEditorApp:
                     []), Cardinality([])
 
         self._draw_model()
+
+    def ask_delete_method(self, feature_name: str) -> bool:
+        result = {"is_cascading": False}
+
+        def submit(choice: str):
+            result["is_cascading"] = (choice == "Cascade")
+            dialog.destroy()
+
+        dialog = tk.Toplevel()
+        dialog.title("Delete Method")
+        dialog.geometry("300x150")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        label = tk.Label(dialog,
+                         text=(
+                             f"Choose the delete method for feature {feature_name}. Cascade will also delete all descendents, transfer will attach them to their grand-parent."
+                         ),
+                         wraplength=280,
+                         justify="left",
+                         )
+        label.pack(pady=10)
+
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Cascade", command=lambda: submit("Cascade")).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Transfer", command=lambda: submit("Transfer")).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side="left", padx=5)
+
+        dialog.wait_window(dialog)
+
+        return result["is_cascading"]
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
