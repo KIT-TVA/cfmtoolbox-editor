@@ -4,7 +4,7 @@ from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
-from cfmtoolbox import Cardinality, Interval, Feature
+from cfmtoolbox import Cardinality, Interval, Feature, CFM
 
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
@@ -20,13 +20,14 @@ class CFMEditorApp:
 
         self._setup_ui()
 
-    def start(self, cfm):
+    def start(self, cfm) -> CFM:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
         self._initialize_feature_states(self.cfm.root)
         self._draw_model()
         self.root.mainloop()
+        return self.cfm
 
     def _initialize_feature_states(self, feature):
         self.expanded_features[id(feature)] = True  # Initialize all features as expanded
@@ -173,17 +174,74 @@ class CFMEditorApp:
         self.show_feature_dialog(feature=feature)
 
     def delete_feature(self, feature):
-        self.cfm.features.remove(feature)
-        if feature.parent:
-            feature.parent.children.remove(feature)
-            if len(feature.parent.children) == 1:
-                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
-                    feature.parent.children[0].instance_cardinality)
-            if len(feature.parent.children) == 0:
-                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = Cardinality(
-                    []), Cardinality([])
+        # root
+        if feature == self.cfm.root:
+            messagebox.showerror("Error", "Cannot delete root feature.")
 
-        self._draw_model()
+        # leaf
+        elif len(feature.children) == 0:
+            feature.parent.children.remove(feature)
+            self._draw_model()
+
+        # inner node
+        else:
+            self.show_delete_dialog(feature)
+
+    # This is only used for inner nodes, so it is safe to assume that the feature has children and a parent.
+    def show_delete_dialog(self, feature: Feature):
+        def submit(delete_subtree: bool):
+            parent = feature.parent
+            former_number_of_children = len(parent.children)
+            if not delete_subtree:
+                # Move its children to the parent at the index of the feature
+                index = parent.children.index(feature)
+                for child in reversed(feature.children):
+                    parent.children.insert(index, child)
+                    child.parent = parent
+            parent.children.remove(feature)
+            group_created = False
+            if len(parent.children) == 0:
+                parent.group_type_cardinality, parent.group_instance_cardinality = Cardinality(
+                    []), Cardinality([])
+            if len(parent.children) == 1:
+                parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
+                    parent.children[0].instance_cardinality)
+            # A new group was created
+            if len(parent.children) == 2 and former_number_of_children < 2:
+                parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_multiple_children(
+                    [child.instance_cardinality for child in parent.children])
+                group_created = True
+
+            self._draw_model()
+            dialog.destroy()
+            if group_created:
+                messagebox.showinfo("Group Created",
+                                    "A new group was created. You can edit its cardinalities now.")
+                self.show_feature_dialog(feature=parent)
+
+        dialog = tk.Toplevel()
+        dialog.title("Delete Method")
+        dialog.geometry("300x150")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        label = tk.Label(dialog,
+                         text=(
+                             f"Choose the delete method for feature {feature.name}. Delete subtree will also delete all descendents, transfer will attach them to their grand-parent."
+                         ),
+                         wraplength=280,
+                         justify="left",
+                         )
+        label.pack(pady=10)
+
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Delete subtree", command=lambda: submit(True)).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Transfer", command=lambda: submit(False)).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side="left", padx=5)
+
+        dialog.wait_window(dialog)
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
@@ -229,6 +287,10 @@ class CFMEditorApp:
                         return
                     feature.group_type_cardinality = group_type_card
                     feature.group_instance_cardinality = group_instance_card
+                if is_only_child:
+                    feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
+                        feature.instance_cardinality)
+
             else:
                 new_feature = Feature(
                     name=feature_name,
@@ -261,6 +323,7 @@ class CFMEditorApp:
 
         is_edit = feature is not None
         is_group = is_edit and len(feature.children) > 1
+        is_only_child = is_edit and feature.parent and len(feature.parent.children) == 1
 
         current_name = feature.name if is_edit else ""
         current_feature_card = cardinality_to_edit_str(feature.instance_cardinality) if is_edit else ""
