@@ -4,7 +4,7 @@ from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
-from cfmtoolbox import Cardinality, Interval, Feature
+from cfmtoolbox import Cardinality, Interval, Feature, CFM
 
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
@@ -20,13 +20,14 @@ class CFMEditorApp:
 
         self._setup_ui()
 
-    def start(self, cfm):
+    def start(self, cfm) -> CFM:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
         self._initialize_feature_states(self.cfm.root)
         self._draw_model()
         self.root.mainloop()
+        return self.cfm
 
     def _initialize_feature_states(self, feature):
         self.expanded_features[id(feature)] = True  # Initialize all features as expanded
@@ -56,7 +57,6 @@ class CFMEditorApp:
         if self._confirm_save_changes():
             self.root.quit()
 
-    # TODO: Test - didn't work as expected
     def _reset_model(self):
         self.cfm = deepcopy(self.original_cfm)
         self._initialize_feature_states(self.cfm.root)
