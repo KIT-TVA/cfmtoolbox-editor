@@ -56,6 +56,7 @@ class CFMEditorApp:
         if self._confirm_save_changes():
             self.root.quit()
 
+    # TODO: Test - didn't work as expected
     def _reset_model(self):
         self.cfm = deepcopy(self.original_cfm)
         self._initialize_feature_states(self.cfm.root)
@@ -173,26 +174,50 @@ class CFMEditorApp:
         self.show_feature_dialog(feature=feature)
 
     def delete_feature(self, feature):
-        is_cascading = self.ask_delete_method(feature.name)
-        # TODO: cascade or transfer
-        self.cfm.features.remove(feature)
-        if feature.parent:
+        # root
+        if feature == self.cfm.root:
+            messagebox.showerror("Error", "Cannot delete root feature.")
+
+        # leaf
+        elif len(feature.children) == 0:
             feature.parent.children.remove(feature)
-            if len(feature.parent.children) == 1:
-                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
-                    feature.parent.children[0].instance_cardinality)
-            if len(feature.parent.children) == 0:
-                feature.parent.group_type_cardinality, feature.parent.group_instance_cardinality = Cardinality(
+            self._draw_model()
+
+        # inner node
+        else:
+            self.show_delete_dialog(feature)
+
+    # This is only used for inner nodes, so it is safe to assume that the feature has children and a parent.
+    def show_delete_dialog(self, feature: Feature):
+        def submit(delete_subtree: bool):
+            parent = feature.parent
+            former_number_of_children = len(parent.children)
+            if not delete_subtree:
+                # Move its children to the parent at the index of the feature
+                index = parent.children.index(feature)
+                for child in reversed(feature.children):
+                    parent.children.insert(index, child)
+                    child.parent = parent
+            parent.children.remove(feature)
+            group_created = False
+            if len(parent.children) == 0:
+                parent.group_type_cardinality, parent.group_instance_cardinality = Cardinality(
                     []), Cardinality([])
+            if len(parent.children) == 1:
+                parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_one_child(
+                    parent.children[0].instance_cardinality)
+            # A new group was created
+            if len(parent.children) == 2 and former_number_of_children < 2:
+                parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_multiple_children(
+                    [child.instance_cardinality for child in parent.children])
+                group_created = True
 
-        self._draw_model()
-
-    def ask_delete_method(self, feature_name: str) -> bool:
-        result = {"is_cascading": False}
-
-        def submit(choice: str):
-            result["is_cascading"] = (choice == "Cascade")
+            self._draw_model()
             dialog.destroy()
+            if group_created:
+                messagebox.showinfo("Group Created",
+                                    "A new group was created. You can edit its cardinalities now.")
+                self.show_feature_dialog(feature=parent)
 
         dialog = tk.Toplevel()
         dialog.title("Delete Method")
@@ -202,7 +227,7 @@ class CFMEditorApp:
 
         label = tk.Label(dialog,
                          text=(
-                             f"Choose the delete method for feature {feature_name}. Cascade will also delete all descendents, transfer will attach them to their grand-parent."
+                             f"Choose the delete method for feature {feature.name}. Delete subtree will also delete all descendents, transfer will attach them to their grand-parent."
                          ),
                          wraplength=280,
                          justify="left",
@@ -212,13 +237,11 @@ class CFMEditorApp:
         button_frame = tk.Frame(dialog)
         button_frame.pack(pady=10)
 
-        tk.Button(button_frame, text="Cascade", command=lambda: submit("Cascade")).pack(side="left", padx=5)
-        tk.Button(button_frame, text="Transfer", command=lambda: submit("Transfer")).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Delete subtree", command=lambda: submit(True)).pack(side="left", padx=5)
+        tk.Button(button_frame, text="Transfer", command=lambda: submit(False)).pack(side="left", padx=5)
         tk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(side="left", padx=5)
 
         dialog.wait_window(dialog)
-
-        return result["is_cascading"]
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
