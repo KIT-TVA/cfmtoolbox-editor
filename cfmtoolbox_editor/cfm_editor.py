@@ -300,7 +300,7 @@ class CFMEditorApp:
 
         is_edit = feature is not None
         is_group = is_edit and len(feature.children) > 1
-        is_only_child = is_edit and len(feature.parent.children) == 1
+        is_only_child = is_edit and feature.parent and len(feature.parent.children) == 1
 
         current_name = feature.name if is_edit else ""
         current_feature_card = cardinality_to_edit_str(feature.instance_cardinality) if is_edit else ""
