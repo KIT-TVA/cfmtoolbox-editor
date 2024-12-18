@@ -53,6 +53,8 @@ class GraphLayoutCalculator:
         if not children or len(children) == 0:
             return [ceil(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
         else:
+            # TODO: Non-neighbouring subtrees can also overlap. Possible solution: Merge subtrees one by one and always
+            #  compute new contour.
             contours = {}
             for child in children:
                 contours[id(child)] = self._compute_shift(child)
