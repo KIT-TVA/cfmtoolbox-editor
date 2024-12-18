@@ -6,6 +6,7 @@ from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM
 
+from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
 
@@ -17,6 +18,7 @@ class CFMEditorApp:
         self.root = tk.Tk()
         self.root.title("CFM Editor")
         self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
+        self.positions = {}
 
         self._setup_ui()
 
@@ -64,11 +66,13 @@ class CFMEditorApp:
 
     # TODO: Calculate more suitable feature positions
     def _draw_model(self):
+        self.positions = GraphLayoutCalculator(self.cfm).compute_positions()
         self.canvas.delete("all")
-        self.draw_feature(self.cfm.root, "middle", 400, 50)
+        self.draw_feature(self.cfm.root, "middle")
 
     # TODO: Refactor this method as it became too long
-    def draw_feature(self, feature: Feature, feature_instance_card_pos: str, x: int, y: int, x_offset: int = 200):
+    def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
+        x, y = self.positions[id(feature)].x, self.positions[id(feature)].y
         node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
         bbox = self.canvas.bbox(node_id)
         padding_x = 4
@@ -77,19 +81,19 @@ class CFMEditorApp:
         rect_id = self.canvas.create_rectangle(padded_bbox, fill="lightgrey")
         self.canvas.tag_raise(node_id, rect_id)
 
-        # bbox[1] is the y-coordinate of the top side of the box
-        match feature_instance_card_pos:
-            case "right":
-                anchor = tk.W
-                feature_instance_x = x + 4
-            case "left":
-                anchor = tk.E
-                feature_instance_x = x - 4
-            case _:
-                anchor = tk.CENTER
-                feature_instance_x = x
-
         if not feature == self.cfm.root:
+            # bbox[1] is the y-coordinate of the top side of the box
+            match feature_instance_card_pos:
+                case "right":
+                    anchor = tk.W
+                    feature_instance_x = x + 4
+                case "left":
+                    anchor = tk.E
+                    feature_instance_x = x - 4
+                case _:
+                    anchor = tk.CENTER
+                    feature_instance_x = x
+
             feature_instance_y = padded_bbox[1] - 10
             # TODO: The brackets don't look nice
             feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
@@ -101,6 +105,7 @@ class CFMEditorApp:
         # Add collapse/expand button
         if feature.children:
             expanded = self.expanded_features.get(id(feature), True)
+            # TODO: Maybe add colors
             button_text = "-" if expanded else "+"
             button_id = self.canvas.create_text(padded_bbox[2] + 10, y, text=button_text, tags="button",
                                                 font=Font(weight="bold"))
@@ -119,10 +124,9 @@ class CFMEditorApp:
             left_angle = 180
             right_angle = 360
 
-            new_y = y + 100
             for i, child in enumerate(feature.children):
-                new_x = x if len(feature.children) == 1 else x - x_offset + (
-                        i * ((2 * x_offset) // (len(feature.children) - 1)))
+                new_x = self.positions[id(child)].x
+                new_y = self.positions[id(child)].y
                 edge_id = self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
 
                 # Calculate angles for the group arc and adjust to canvas coordinate system
@@ -142,7 +146,7 @@ class CFMEditorApp:
                                             tags=f"{feature.name}_group_instance", anchor=tk.W)
 
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
-                self.draw_feature(child, child_feature_instance_card_pos, new_x, new_y, round(x_offset / 3.5))
+                self.draw_feature(child, child_feature_instance_card_pos)
 
             if len(feature.children) > 1:
                 arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
