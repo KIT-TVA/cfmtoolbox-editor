@@ -28,7 +28,9 @@ class GraphLayoutCalculator:
         self.shift = {id(feature): 0 for feature in cfm.features}
         """The x shifts of the features relative to their parent."""
 
-        self.scale_text = 2.6
+        # TODO: This works for a normal distribution of letters. But it is too small for feature names containing only
+        #  m's for example. A better solution would be to calculate the width of the text in pixels if possible.
+        self.scale_text = 3
 
     def compute_positions(self) -> dict[int, Point]:
         """Computes the coordinates of all features with the Reingold-Tilford algorithm. The dictionary can be accessed
@@ -51,6 +53,8 @@ class GraphLayoutCalculator:
         are calculated relative to the parent."""
         children = feature.children
         if not children or len(children) == 0:
+            print(feature.name, [ceil(-self.scale_text * len(feature.name))],
+                  [ceil(self.scale_text * len(feature.name))])
             return [ceil(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
         else:
             # TODO: Non-neighbouring subtrees can also overlap. Possible solution: Merge subtrees one by one and always
@@ -59,9 +63,8 @@ class GraphLayoutCalculator:
             for child in children:
                 contours[id(child)] = self._compute_shift(child)
             # d[i] is the distance between the (i-1)-th and the i-th child
-            d = [0]
+            d = [0 for _ in range(len(children))]
             for i in range(1, len(children)):
-                d.append(0)
                 sum_left = 0
                 sum_right = 0
                 # Make sure the contours never overlap
@@ -70,16 +73,18 @@ class GraphLayoutCalculator:
                     sum_right += contours[id(children[i - 1])][1][j]
                     d[i] = max(d[i], sum_right - sum_left)
                 # add padding
-                d[i] += 50
+                d[i] += 40
             total_distance = sum(d)
 
             accumulated_distance = 0
             for i in range(len(children)):
                 accumulated_distance += d[i]
                 self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
+                print(children[i].name, self.shift[id(children[i])])
 
             contour_left = [ceil(-self.scale_text * len(feature.name)),
-                            self.shift[id(children[0])] + ceil(self.scale_text * len(feature.name))]
+                            self.shift[id(children[0])] + contours[id(children[0])][0][0] + ceil(
+                                self.scale_text * len(feature.name))]
             old_contour = contours[id(children[0])][0]
             contour_left.extend(old_contour[1:])
             curr_height = len(contour_left)
@@ -94,7 +99,8 @@ class GraphLayoutCalculator:
                     curr_height = len(contour_left)
 
             contour_right = [ceil(self.scale_text * len(feature.name)),
-                             self.shift[id(children[-1])] - ceil(self.scale_text * len(feature.name))]
+                             self.shift[id(children[-1])] + contours[id(children[-1])][1][0] - ceil(
+                                 self.scale_text * len(feature.name))]
             old_contour = contours[id(children[-1])][1]
             contour_right.extend(old_contour[1:])
             curr_height = len(contour_right)
@@ -108,6 +114,7 @@ class GraphLayoutCalculator:
                     contour_right.extend(old_contour[curr_height:len(old_contour)])
                     curr_height = len(contour_right)
 
+            print(feature.name, contour_left, contour_right)
             return contour_left, contour_right
 
     def _compute_x(self, feature: Feature):
