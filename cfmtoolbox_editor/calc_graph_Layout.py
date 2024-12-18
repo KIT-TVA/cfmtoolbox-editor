@@ -28,6 +28,8 @@ class GraphLayoutCalculator:
         self.shift = {id(feature): 0 for feature in cfm.features}
         """The x shifts of the features relative to their parent."""
 
+        self.scale_text = 2.5
+
     def compute_positions(self) -> dict[int, Point]:
         """Computes the coordinates of all features with the Reingold-Tilford algorithm. The dictionary can be accessed
         with the feature id."""
@@ -43,7 +45,7 @@ class GraphLayoutCalculator:
     def _compute_y(self, feature: Feature, depth: int):
         """The leveled y coordinate is calculated by a simple breadth-first traversal."""
         # TODO: Check what is a good distance between levels
-        self.pos[id(feature)].y = depth * 50
+        self.pos[id(feature)].y = depth * 100 + 50
         for child in feature.children:
             self._compute_y(child, depth + 1)
 
@@ -54,7 +56,7 @@ class GraphLayoutCalculator:
         are calculated relative to the parent."""
         children = feature.children
         if not children or len(children) == 0:
-            return [-2 * len(feature.name)], [2 * len(feature.name)]
+            return [ceil(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
         else:
             contours = {}
             for child in children:
@@ -72,7 +74,7 @@ class GraphLayoutCalculator:
                     d[i] = max(d[i], sum_right - sum_left)
                 # add padding
                 # TODO: Check what is a good padding
-                d[i] += 20
+                d[i] += 50
             total_distance = sum(d)
 
             accumulated_distance = 0
@@ -80,7 +82,8 @@ class GraphLayoutCalculator:
                 accumulated_distance += d[i]
                 self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
 
-            contour_left = [-2 * len(feature.name), self.shift[id(children[0])] + 2 * len(feature.name)]
+            contour_left = [ceil(-self.scale_text * len(feature.name)),
+                            self.shift[id(children[0])] + ceil(self.scale_text * len(feature.name))]
             old_contour = contours[id(children[0])][0]
             contour_left.extend(old_contour[1:])
             curr_height = len(contour_left)
@@ -94,7 +97,8 @@ class GraphLayoutCalculator:
                     contour_left.extend(old_contour[curr_height:len(old_contour)])
                     curr_height = len(contour_left)
 
-            contour_right = [2 * len(feature.name), self.shift[id(children[-1])] + 2 * len(feature.name)]
+            contour_right = [ceil(self.scale_text * len(feature.name)),
+                             self.shift[id(children[-1])] - ceil(self.scale_text * len(feature.name))]
             old_contour = contours[id(children[-1])][1]
             contour_right.extend(old_contour[1:])
             curr_height = len(contour_right)
