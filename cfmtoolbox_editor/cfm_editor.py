@@ -1,5 +1,6 @@
 from math import atan2, degrees
 import tkinter as tk
+from tkinter import ttk
 from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
@@ -37,17 +38,30 @@ class CFMEditorApp:
             self._initialize_feature_states(child)
 
     def _setup_ui(self):
-        self.canvas = tk.Canvas(self.root, width=800, height=600, bg="white")
-        self.canvas.pack(expand=True, fill='both')
+        frame = ttk.Frame(self.root, width=800, height=600)
+        frame.pack(expand=True, fill=tk.BOTH)
 
-        button_frame = tk.Frame(self.root)
-        button_frame.pack(side='bottom', pady=5)
+        button_frame = ttk.Frame(frame)
+        button_frame.pack(side=tk.BOTTOM, pady=5)
 
-        self.save_button = tk.Button(button_frame, text="Save", command=self._save_model)
-        self.save_button.pack(side='left', padx=5)
+        self.save_button = ttk.Button(button_frame, text="Save", command=self._save_model)
+        self.save_button.pack(side=tk.LEFT, padx=5)
 
-        self.reset_button = tk.Button(button_frame, text="Reset", command=self._reset_model)
-        self.reset_button.pack(side='left', padx=5)
+        self.reset_button = ttk.Button(button_frame, text="Reset", command=self._reset_model)
+        self.reset_button.pack(side=tk.LEFT, padx=5)
+
+        self.v_scroll = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+        self.v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.root.update()
+        self.h_scroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL)
+        self.h_scroll.pack(side=tk.BOTTOM, fill=tk.X, padx=self.v_scroll.winfo_width())
+
+        self.canvas = tk.Canvas(frame, bg="white", width=800, height=600, scrollregion=(0, 0, 1000, 1000))
+        self.canvas.config(yscrollcommand=self.v_scroll.set, xscrollcommand=self.h_scroll.set)
+        self.canvas.pack(expand=True, fill=tk.BOTH)
+
+        self.v_scroll.config(command=self.canvas.yview)
+        self.h_scroll.config(command=self.canvas.xview)
 
     def _exit_application(self):
         self.root.quit()
@@ -69,6 +83,15 @@ class CFMEditorApp:
         self.positions = GraphLayoutCalculator(self.cfm).compute_positions()
         self.canvas.delete("all")
         self.draw_feature(self.cfm.root, "middle")
+
+        min_x = min(pos.x for pos in self.positions.values())
+        min_y = min(pos.y for pos in self.positions.values())
+        max_x = max(pos.x for pos in self.positions.values())
+        max_y = max(pos.y for pos in self.positions.values())
+
+        padding_x = 100
+        padding_y = 50
+        self.canvas.config(scrollregion=(min_x - padding_x, min_y - padding_y, max_x + padding_x, max_y + padding_y))
 
     # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
