@@ -5,7 +5,7 @@ from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
-from cfmtoolbox import Cardinality, Interval, Feature, CFM
+from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
 from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
@@ -38,10 +38,11 @@ class CFMEditorApp:
             self._initialize_feature_states(child)
 
     def _setup_ui(self):
-        frame = ttk.Frame(self.root, width=800, height=600)
-        frame.pack(expand=True, fill=tk.BOTH)
+        main_frame = ttk.Frame(self.root, width=800, height=600)
+        main_frame.pack(expand=True, fill=tk.BOTH)
 
-        button_frame = ttk.Frame(frame)
+        # Buttons
+        button_frame = ttk.Frame(main_frame)
         button_frame.pack(side=tk.BOTTOM, pady=5)
 
         self.save_button = ttk.Button(button_frame, text="Save", command=self._save_model)
@@ -50,13 +51,43 @@ class CFMEditorApp:
         self.reset_button = ttk.Button(button_frame, text="Reset", command=self._reset_model)
         self.reset_button.pack(side=tk.LEFT, padx=5)
 
-        self.v_scroll = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+        # Constraints
+        constraints_frame = ttk.Frame(main_frame)
+        constraints_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+
+        constraints_label = ttk.Label(constraints_frame, text="Constraints", font=("Arial", 12, "bold"))
+        constraints_label.pack(side=tk.TOP, pady=5)
+
+        self.constraints_tree = ttk.Treeview(constraints_frame, columns=(
+            "First Feature", "First Cardinality", "Type", "Second Feature", "Second Cardinality", "Edit", "Delete"),
+                                             show="tree",
+                                             height=6)
+        self.constraints_tree.column("First Feature", anchor=tk.W, width=150)
+        self.constraints_tree.column("First Cardinality", anchor=tk.W, width=120)
+        self.constraints_tree.column("Type", anchor=tk.W, width=100)
+        self.constraints_tree.column("Second Feature", anchor=tk.W, width=150)
+        self.constraints_tree.column("Second Cardinality", anchor=tk.W, width=120)
+        self.constraints_tree.column("Edit", anchor=tk.CENTER, width=50)
+        self.constraints_tree.column("Delete", anchor=tk.CENTER, width=50)
+        self.constraints_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        tree_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL, command=self.constraints_tree.yview)
+        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.constraints_tree.config(yscrollcommand=tree_scroll.set)
+
+        self.constraints_tree.bind("<Button-1>", self.on_constraints_click)
+
+        # TODO: Button to add new constraint (or action on features)
+
+        # Scrollbars
+        self.v_scroll = ttk.Scrollbar(main_frame, orient=tk.VERTICAL)
         self.v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.root.update()
-        self.h_scroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL)
+        self.h_scroll = ttk.Scrollbar(main_frame, orient=tk.HORIZONTAL)
         self.h_scroll.pack(side=tk.BOTTOM, fill=tk.X, padx=self.v_scroll.winfo_width())
 
-        self.canvas = tk.Canvas(frame, bg="white", width=800, height=600, scrollregion=(0, 0, 1000, 1000))
+        # Canvas (for model graph)
+        self.canvas = tk.Canvas(main_frame, bg="white", width=800, height=400, scrollregion=(0, 0, 1000, 1000))
         self.canvas.config(yscrollcommand=self.v_scroll.set, xscrollcommand=self.h_scroll.set)
         self.canvas.pack(expand=True, fill=tk.BOTH)
 
@@ -92,6 +123,8 @@ class CFMEditorApp:
         padding_x = 100
         padding_y = 50
         self.canvas.config(scrollregion=(min_x - padding_x, min_y - padding_y, max_x + padding_x, max_y + padding_y))
+
+        self.update_constraints()
 
     # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
@@ -182,6 +215,34 @@ class CFMEditorApp:
                                                                                         "[",
                                                                                         "]"),
                                                         tags=f"{feature.name}_group_type")
+
+    def update_constraints(self):
+        # delete old entries
+        for constraint in self.constraints_tree.get_children():
+            self.constraints_tree.delete(constraint)
+
+        # add current constraints
+        for constraint in self.cfm.constraints:
+            constraint_id = self.constraints_tree.insert("", "end", values=(constraint.first_feature.name,
+                                                                            str(constraint.first_cardinality),
+                                                                            "requires" if constraint.require else "excludes",
+                                                                            constraint.second_feature.name,
+                                                                            str(constraint.second_cardinality), "🖉",
+                                                                            "🗑️"))
+
+    def on_constraints_click(self, event):
+        region = self.constraints_tree.identify("region", event.x, event.y)
+        if region == "cell":
+            column = self.constraints_tree.identify_column(event.x)
+            row = self.constraints_tree.identify_row(event.y)
+
+            if column == "#6":  # Edit column (where edit icon is displayed)
+                print(f"Edit icon clicked for row {row}")
+                # TODO
+
+            elif column == "#7":  # Delete column (where delete icon is displayed)
+                print(f"Delete icon clicked for row {row}")
+                # TODO
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
