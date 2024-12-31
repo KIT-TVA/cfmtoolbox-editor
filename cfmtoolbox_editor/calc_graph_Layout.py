@@ -53,8 +53,6 @@ class GraphLayoutCalculator:
         are calculated relative to the parent."""
         children = feature.children
         if not children or len(children) == 0:
-            print(feature.name, [ceil(-self.scale_text * len(feature.name))],
-                  [ceil(self.scale_text * len(feature.name))])
             return [ceil(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
         else:
             # TODO: Non-neighbouring subtrees can also overlap. Possible solution: Merge subtrees one by one and always
@@ -80,7 +78,6 @@ class GraphLayoutCalculator:
             for i in range(len(children)):
                 accumulated_distance += d[i]
                 self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
-                print(children[i].name, self.shift[id(children[i])])
 
             contour_left = [ceil(-self.scale_text * len(feature.name)),
                             self.shift[id(children[0])] + contours[id(children[0])][0][0] + ceil(
@@ -114,7 +111,6 @@ class GraphLayoutCalculator:
                     contour_right.extend(old_contour[curr_height:len(old_contour)])
                     curr_height = len(contour_right)
 
-            print(feature.name, contour_left, contour_right)
             return contour_left, contour_right
 
     def _compute_x(self, feature: Feature):
