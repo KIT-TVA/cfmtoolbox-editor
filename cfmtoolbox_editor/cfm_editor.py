@@ -8,6 +8,7 @@ from tkinter.font import Font
 from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
 from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
+from cfmtoolbox_editor.tooltip import ToolTip
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
 
@@ -20,6 +21,7 @@ class CFMEditorApp:
         self.root.title("CFM Editor")
         self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
         self.positions = {}
+        self.last_hovered_cell = (None, None)  # (row, column) for constraints tooltip
 
         self._setup_ui()
 
@@ -58,26 +60,34 @@ class CFMEditorApp:
         constraints_label = ttk.Label(constraints_frame, text="Constraints", font=("Arial", 12, "bold"))
         constraints_label.pack(side=tk.TOP, pady=5)
 
+        self.tree_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL)
+        self.tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # TODO: Button to add new constraint (or action on features)
+        self.add_constraint_button = ttk.Button(constraints_frame, text="Add constraint")
+        self.add_constraint_button.pack(side=tk.RIGHT, padx=5)
+
         self.constraints_tree = ttk.Treeview(constraints_frame, columns=(
             "First Feature", "First Cardinality", "Type", "Second Feature", "Second Cardinality", "Edit", "Delete"),
                                              show="tree",
-                                             height=6)
-        self.constraints_tree.column("First Feature", anchor=tk.W, width=150)
-        self.constraints_tree.column("First Cardinality", anchor=tk.W, width=120)
-        self.constraints_tree.column("Type", anchor=tk.W, width=100)
-        self.constraints_tree.column("Second Feature", anchor=tk.W, width=150)
-        self.constraints_tree.column("Second Cardinality", anchor=tk.W, width=120)
+                                             height=4)
+        self.constraints_tree.column("First Feature", anchor=tk.E, width=120)
+        self.constraints_tree.column("First Cardinality", anchor=tk.W, width=100)
+        self.constraints_tree.column("Type", anchor=tk.CENTER, width=60)
+        self.constraints_tree.column("Second Feature", anchor=tk.E, width=120)
+        self.constraints_tree.column("Second Cardinality", anchor=tk.W, width=100)
         self.constraints_tree.column("Edit", anchor=tk.CENTER, width=50)
         self.constraints_tree.column("Delete", anchor=tk.CENTER, width=50)
         self.constraints_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        tree_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL, command=self.constraints_tree.yview)
-        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.constraints_tree.config(yscrollcommand=tree_scroll.set)
+        self.constraints_tree.config(yscrollcommand=self.tree_scroll.set)
+        self.tree_scroll.config(command=self.constraints_tree.yview)
 
         self.constraints_tree.bind("<Button-1>", self.on_constraints_click)
 
-        # TODO: Button to add new constraint (or action on features)
+        self.constraints_tooltip = ToolTip(constraints_frame)
+        self.constraints_tree.bind("<Motion>", self.on_constraints_hover)
+        self.constraints_tree.bind("<Leave>", self.on_constraints_leave)
 
         # Scrollbars
         self.v_scroll = ttk.Scrollbar(main_frame, orient=tk.VERTICAL)
@@ -224,10 +234,13 @@ class CFMEditorApp:
         # add current constraints
         for constraint in self.cfm.constraints:
             constraint_id = self.constraints_tree.insert("", "end", values=(constraint.first_feature.name,
-                                                                            str(constraint.first_cardinality),
+                                                                            cardinality_to_display_str(
+                                                                                constraint.first_cardinality, "<", ">"),
                                                                             "requires" if constraint.require else "excludes",
                                                                             constraint.second_feature.name,
-                                                                            str(constraint.second_cardinality), "🖉",
+                                                                            cardinality_to_display_str(
+                                                                                constraint.second_cardinality, "<",
+                                                                                ">"), "🖉",
                                                                             "🗑️"))
 
     def on_constraints_click(self, event):
@@ -243,6 +256,35 @@ class CFMEditorApp:
             elif column == "#7":  # Delete column (where delete icon is displayed)
                 print(f"Delete icon clicked for row {row}")
                 # TODO
+
+    def on_constraints_hover(self, event):
+        item = self.constraints_tree.identify_row(event.y)
+        column = self.constraints_tree.identify_column(event.x)
+
+        if item and column:
+            if (item, column) == self.last_hovered_cell:
+                return
+            self.last_hovered_cell = (item, column)
+
+            col_index = int(column[1:]) - 1
+            columns = self.constraints_tree["columns"]
+            col_name = columns[col_index] if 0 <= col_index < len(columns) else None
+            if col_name in ["Edit", "Delete", None]:
+                self.constraints_tooltip.hide_tip()
+                return
+
+            value = self.constraints_tree.item(item, "values")
+            if value and col_index < len(value):
+                self.constraints_tooltip.show_tip(value[col_index])
+            else:
+                self.constraints_tooltip.hide_tip()
+        else:
+            self.constraints_tooltip.hide_tip()
+            self.last_hovered_cell = (None, None)
+
+    def on_constraints_leave(self, event):
+        self.constraints_tooltip.hide_tip()
+        self.last_hovered_cell = (None, None)
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
