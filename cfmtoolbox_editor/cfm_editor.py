@@ -5,7 +5,7 @@ from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
-from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
+from cfmtoolbox import Cardinality, Interval, Feature, CFM
 
 from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
 from cfmtoolbox_editor.tooltip import ToolTip
@@ -19,9 +19,11 @@ class CFMEditorApp:
         self.original_cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
+
         self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
         self.positions = {}
         self.last_hovered_cell = (None, None)  # (row, column) for constraints tooltip
+        self.constraint_mapping = {}  # Mapping of constraint treeview items to constraints
 
         self._setup_ui()
 
@@ -230,6 +232,7 @@ class CFMEditorApp:
         # delete old entries
         for constraint in self.constraints_tree.get_children():
             self.constraints_tree.delete(constraint)
+        self.constraint_mapping = {}
 
         # add current constraints
         for constraint in self.cfm.constraints:
@@ -242,20 +245,28 @@ class CFMEditorApp:
                                                                                 constraint.second_cardinality, "<",
                                                                                 ">"), "🖉",
                                                                             "🗑️"))
+            self.constraint_mapping[constraint_id] = constraint
 
     def on_constraints_click(self, event):
         region = self.constraints_tree.identify("region", event.x, event.y)
         if region == "cell":
-            column = self.constraints_tree.identify_column(event.x)
             row = self.constraints_tree.identify_row(event.y)
+            constraint = self.constraint_mapping.get(row)
+            if not constraint:
+                return
 
-            if column == "#6":  # Edit column (where edit icon is displayed)
-                print(f"Edit icon clicked for row {row}")
-                # TODO
+            column = self.constraints_tree.identify_column(event.x)
+            col_index = int(column[1:]) - 1
+            columns = self.constraints_tree["columns"]
+            col_name = columns[col_index] if 0 <= col_index < len(columns) else None
 
-            elif column == "#7":  # Delete column (where delete icon is displayed)
-                print(f"Delete icon clicked for row {row}")
-                # TODO
+            if col_name == "Edit":
+                # print(f"Edit icon clicked for row {row}")
+                self.edit_constraint(constraint)
+
+            elif col_name == "Delete":
+                # print(f"Delete icon clicked for row {row}")
+                self.delete_constraint(constraint)
 
     def on_constraints_hover(self, event):
         item = self.constraints_tree.identify_row(event.y)
@@ -285,6 +296,66 @@ class CFMEditorApp:
     def on_constraints_leave(self, event):
         self.constraints_tooltip.hide_tip()
         self.last_hovered_cell = (None, None)
+
+    def edit_constraint(self, constraint):
+        def on_submit():
+            first_card = first_card_var.get().strip()
+            second_card = second_card_var.get().strip()
+            if not first_card or not second_card:
+                messagebox.showerror("Input Error", "Cardinalities cannot be empty.")
+                return
+            try:
+                first_card = edit_str_to_cardinality(first_card)
+                second_card = edit_str_to_cardinality(second_card)
+            except ValueError:
+                messagebox.showerror("Input Error",
+                                     "Invalid cardinality format. Use 'min,max' or 'min,*' for intervals.")
+                return
+
+            constraint.first_cardinality = first_card
+            constraint.second_cardinality = second_card
+            self.update_constraints()
+            dialog.destroy()
+
+        dialog = tk.Toplevel()
+        dialog.title("Edit Constraint")
+        dialog.geometry("300x180")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        label = tk.Label(dialog,
+                         text=(
+                             f"Edit the cardinalities for the constraint between {constraint.first_feature.name} and {constraint.second_feature.name}."
+                         ),
+                         wraplength=280,
+                         justify="left",
+                         )
+        label.grid(row=0, column=0, columnspan=2, pady=10)
+
+        first_card_label = tk.Label(dialog, text="First Feature Cardinality:")
+        first_card_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        first_card_var = StringVar(value=cardinality_to_edit_str(constraint.first_cardinality))
+        first_card_entry = tk.Entry(dialog, textvariable=first_card_var)
+        first_card_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        second_card_label = tk.Label(dialog, text="Second Feature Cardinality:")
+        second_card_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        second_card_var = StringVar(value=cardinality_to_edit_str(constraint.second_cardinality))
+        second_card_entry = tk.Entry(dialog, textvariable=second_card_var)
+        second_card_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        submit_button = tk.Button(dialog, text="Submit", command=on_submit)
+        submit_button.grid(row=3, column=0, columnspan=2, pady=10)
+
+        dialog.wait_window(dialog)
+
+    def delete_constraint(self, constraint):
+        # Ask user if they are sure
+        if not messagebox.askokcancel("Delete Constraint", f"Are you sure you want to delete the constraint between "
+                                                           f"{constraint.first_feature.name} and {constraint.second_feature.name}?"):
+            return
+        self.cfm.constraints.remove(constraint)
+        self.update_constraints()
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
