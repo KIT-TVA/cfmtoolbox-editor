@@ -301,6 +301,7 @@ class CFMEditorApp:
         def on_submit():
             first_card = first_card_var.get().strip()
             second_card = second_card_var.get().strip()
+            constraint_type = type_var.get().strip()
             if not first_card or not second_card:
                 messagebox.showerror("Input Error", "Cardinalities cannot be empty.")
                 return
@@ -314,12 +315,13 @@ class CFMEditorApp:
 
             constraint.first_cardinality = first_card
             constraint.second_cardinality = second_card
+            constraint.require = constraint_type == "requires"
             self.update_constraints()
             dialog.destroy()
 
         dialog = tk.Toplevel()
         dialog.title("Edit Constraint")
-        dialog.geometry("300x180")
+        dialog.geometry("300x220")
         dialog.transient(self.root)
         dialog.grab_set()
 
@@ -332,20 +334,26 @@ class CFMEditorApp:
                          )
         label.grid(row=0, column=0, columnspan=2, pady=10)
 
-        first_card_label = tk.Label(dialog, text="First Feature Cardinality:")
+        first_card_label = tk.Label(dialog, text=f"{constraint.first_feature.name} cardinality:")
         first_card_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
         first_card_var = StringVar(value=cardinality_to_edit_str(constraint.first_cardinality))
         first_card_entry = tk.Entry(dialog, textvariable=first_card_var)
         first_card_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        second_card_label = tk.Label(dialog, text="Second Feature Cardinality:")
-        second_card_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        type_label = tk.Label(dialog, text="Constraint Type:")
+        type_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        type_var = StringVar(value="requires" if constraint.require else "excludes")
+        type_dropdown = ttk.Combobox(dialog, textvariable=type_var, values=["requires", "excludes"])
+        type_dropdown.grid(row=2, column=1, padx=5, pady=5)
+
+        second_card_label = tk.Label(dialog, text=f"{constraint.second_feature.name} cardinality:")
+        second_card_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
         second_card_var = StringVar(value=cardinality_to_edit_str(constraint.second_cardinality))
         second_card_entry = tk.Entry(dialog, textvariable=second_card_var)
-        second_card_entry.grid(row=2, column=1, padx=5, pady=5)
+        second_card_entry.grid(row=3, column=1, padx=5, pady=5)
 
         submit_button = tk.Button(dialog, text="Submit", command=on_submit)
-        submit_button.grid(row=3, column=0, columnspan=2, pady=10)
+        submit_button.grid(row=4, column=0, columnspan=2, pady=10)
 
         dialog.wait_window(dialog)
 
