@@ -5,7 +5,7 @@ from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
-from cfmtoolbox import Cardinality, Interval, Feature, CFM
+from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
 from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
 from cfmtoolbox_editor.tooltip import ToolTip
@@ -65,10 +65,6 @@ class CFMEditorApp:
         self.tree_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL)
         self.tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # TODO: Button to add new constraint (or action on features)
-        self.add_constraint_button = ttk.Button(constraints_frame, text="Add constraint")
-        self.add_constraint_button.pack(side=tk.RIGHT, padx=5)
-
         self.constraints_tree = ttk.Treeview(constraints_frame, columns=(
             "First Feature", "First Cardinality", "Type", "Second Feature", "Second Cardinality", "Edit", "Delete"),
                                              show="tree",
@@ -121,7 +117,6 @@ class CFMEditorApp:
         self._initialize_feature_states(self.cfm.root)
         self._draw_model()
 
-    # TODO: Calculate more suitable feature positions
     def _draw_model(self):
         self.positions = GraphLayoutCalculator(self.cfm).compute_positions()
         self.canvas.delete("all")
@@ -297,11 +292,18 @@ class CFMEditorApp:
         self.constraints_tooltip.hide_tip()
         self.last_hovered_cell = (None, None)
 
-    def edit_constraint(self, constraint):
+    def constraint_dialog(self, constraint=None, first_feature=None, second_feature=None):
+        """
+        Opens a dialog for adding or editing a constraint.
+        - If `constraint` is provided, it will edit the existing constraint.
+        - Otherwise, it will create a new constraint using `first_feature` and `second_feature`.
+        """
+
         def on_submit():
             first_card = first_card_var.get().strip()
             second_card = second_card_var.get().strip()
             constraint_type = type_var.get().strip()
+
             if not first_card or not second_card:
                 messagebox.showerror("Input Error", "Cardinalities cannot be empty.")
                 return
@@ -313,42 +315,69 @@ class CFMEditorApp:
                                      "Invalid cardinality format. Use 'min,max' or 'min,*' for intervals.")
                 return
 
-            constraint.first_cardinality = first_card
-            constraint.second_cardinality = second_card
-            constraint.require = constraint_type == "requires"
+            if constraint:
+                # Update the existing constraint
+                constraint.first_cardinality = first_card
+                constraint.second_cardinality = second_card
+                constraint.require = constraint_type == "requires"
+            else:
+                # Create a new constraint
+                new_constraint = Constraint(
+                    require=(constraint_type == "requires"),
+                    first_feature=first_feature,
+                    first_cardinality=first_card,
+                    second_feature=second_feature,
+                    second_cardinality=second_card,
+                )
+                self.cfm.constraints.append(new_constraint)
+
             self.update_constraints()
             dialog.destroy()
 
+        # Prepare the dialog
         dialog = tk.Toplevel()
-        dialog.title("Edit Constraint")
+        dialog.title("Edit Constraint" if constraint else "Add Constraint")
         dialog.geometry("300x220")
         dialog.transient(self.root)
         dialog.grab_set()
 
-        label = tk.Label(dialog,
-                         text=(
-                             f"Edit the cardinalities for the constraint between {constraint.first_feature.name} and {constraint.second_feature.name}."
-                         ),
-                         wraplength=280,
-                         justify="left",
-                         )
+        if constraint:
+            dialog_label_text = (
+                f"Edit the cardinalities for the constraint between "
+                f"{constraint.first_feature.name} and {constraint.second_feature.name}."
+            )
+            initial_first_card = cardinality_to_edit_str(constraint.first_cardinality)
+            initial_second_card = cardinality_to_edit_str(constraint.second_cardinality)
+            initial_constraint_type = "requires" if constraint.require else "excludes"
+        else:
+            dialog_label_text = (
+                f"Define the cardinalities for the constraint between "
+                f"{first_feature.name} and {second_feature.name}."
+            )
+            initial_first_card = ""
+            initial_second_card = ""
+            initial_constraint_type = "requires"
+
+        label = tk.Label(dialog, text=dialog_label_text, wraplength=280, justify="left")
         label.grid(row=0, column=0, columnspan=2, pady=10)
 
-        first_card_label = tk.Label(dialog, text=f"{constraint.first_feature.name} cardinality:")
+        first_card_label = tk.Label(dialog,
+                                    text=f"{first_feature.name if first_feature else constraint.first_feature.name} cardinality:")
         first_card_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        first_card_var = StringVar(value=cardinality_to_edit_str(constraint.first_cardinality))
+        first_card_var = StringVar(value=initial_first_card)
         first_card_entry = tk.Entry(dialog, textvariable=first_card_var)
         first_card_entry.grid(row=1, column=1, padx=5, pady=5)
 
         type_label = tk.Label(dialog, text="Constraint Type:")
         type_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        type_var = StringVar(value="requires" if constraint.require else "excludes")
+        type_var = StringVar(value=initial_constraint_type)
         type_dropdown = ttk.Combobox(dialog, textvariable=type_var, values=["requires", "excludes"])
         type_dropdown.grid(row=2, column=1, padx=5, pady=5)
 
-        second_card_label = tk.Label(dialog, text=f"{constraint.second_feature.name} cardinality:")
+        second_card_label = tk.Label(dialog,
+                                     text=f"{second_feature.name if second_feature else constraint.second_feature.name} cardinality:")
         second_card_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        second_card_var = StringVar(value=cardinality_to_edit_str(constraint.second_cardinality))
+        second_card_var = StringVar(value=initial_second_card)
         second_card_entry = tk.Entry(dialog, textvariable=second_card_var)
         second_card_entry.grid(row=3, column=1, padx=5, pady=5)
 
@@ -356,6 +385,32 @@ class CFMEditorApp:
         submit_button.grid(row=4, column=0, columnspan=2, pady=10)
 
         dialog.wait_window(dialog)
+
+    def add_constraint(self, feature):
+        def on_canvas_click(event):
+            clicked_item = self.canvas.find_withtag("current")
+            if not clicked_item:
+                messagebox.showerror("Selection Error", "Please click on a feature.")
+                return
+
+            # TODO: Check that features are not the same
+            clicked_tags = self.canvas.gettags(clicked_item[0])
+            second_feature_name = next(
+                (tag for tag in clicked_tags if tag in (feat.name for feat in self.cfm.features)), None)
+            second_feature = next((f for f in self.cfm.features if f.name == second_feature_name), None)
+
+            if not second_feature:
+                messagebox.showerror("Selection Error", "Please click on a feature.")
+                return
+
+            self.canvas.unbind("<Button-1>")
+            self.constraint_dialog(first_feature=feature, second_feature=second_feature)
+
+        messagebox.showinfo("Select Feature", "Click on the second feature to define the constraint.")
+        self.canvas.bind("<Button-1>", on_canvas_click)
+
+    def edit_constraint(self, constraint):
+        self.constraint_dialog(constraint=constraint)
 
     def delete_constraint(self, constraint):
         # Ask user if they are sure
@@ -374,6 +429,7 @@ class CFMEditorApp:
         menu.add_command(label="Add Child", command=lambda: self.add_feature(feature))
         menu.add_command(label="Edit Feature", command=lambda: self.edit_feature(feature))
         menu.add_command(label="Delete Feature", command=lambda: self.delete_feature(feature))
+        menu.add_command(label="Add Constraint", command=lambda: self.add_constraint(feature))
         menu.post(event.x_root, event.y_root)
 
     def add_feature(self, parent):
