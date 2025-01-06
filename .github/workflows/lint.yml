@@ -38,10 +38,3 @@ jobs:
       - name: Run pylint
         run: |
           pylint cfmtoolbox_editor
-          
-      - name: Smelly Python
-        uses: smelly-python/smell-my-pr@v1.1.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          command: pipenv run smelly-python -d cfmtoolbox_editor
-          install-pipenv: true
