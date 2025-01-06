@@ -1,0 +1,40 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" and "develop" branches
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Prepare Python-Env (optional, if necessary)
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # Smelly Python Action ausführen
+      - name: Smelly Python: Smell My PR
+        uses: smelly-python/smell-my-pr@v1.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          command: pipenv run smelly-python -d src
+          install-pipenv: true
