@@ -30,11 +30,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-
+          
       # Smelly Python Action ausführen
-      - name: Smelly Python: Smell My PR
+      - name: Smelly Python
         uses: smelly-python/smell-my-pr@v1.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          command: pipenv run smelly-python -d src
+          command: pipenv run smelly-python -d cfmtoolbox_editor
           install-pipenv: true
