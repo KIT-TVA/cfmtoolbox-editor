@@ -36,3 +36,5 @@ jobs:
           poetry run ruff check cfmtoolbox_editor tests
           poetry run ruff format --check cfmtoolbox_editor tests
           poetry run mypy cfmtoolbox_editor tests
+          poetry run black --check cfmtoolbox_editor tests
+          poetry run flake8 cfmtoolbox_editor tests
