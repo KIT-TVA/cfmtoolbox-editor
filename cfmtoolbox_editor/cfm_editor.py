@@ -129,7 +129,8 @@ class CFMEditorApp:
 
         padding_x = 100
         padding_y = 50
-        self.canvas.config(scrollregion=(min_x - padding_x, min_y - padding_y, max_x + padding_x, max_y + padding_y))
+        self.canvas.config(
+            scrollregion=(min(min_x - padding_x, 0), min_y - padding_y, max_x + padding_x, max_y + padding_y))
 
         self.update_constraints()
 
@@ -445,8 +446,12 @@ class CFMEditorApp:
 
         # leaf
         elif len(feature.children) == 0:
-            feature.parent.children.remove(feature)
-            self._draw_model()
+            if messagebox.askokcancel("Delete Feature",
+                                      f"Are you sure you want to delete the feature {feature.name} and related constraints?"):
+                feature.parent.children.remove(feature)
+                self.cfm.constraints = [c for c in self.cfm.constraints if
+                                        c.first_feature != feature and c.second_feature != feature]
+                self._draw_model()
 
         # inner node
         else:
@@ -457,13 +462,19 @@ class CFMEditorApp:
         def submit(delete_subtree: bool):
             parent = feature.parent
             former_number_of_children = len(parent.children)
-            if not delete_subtree:
+            if delete_subtree:
+                # Remove all constraints that contain one of the children of the feature
+                self.cfm.constraints = [c for c in self.cfm.constraints if
+                                        c.first_feature not in feature.children and c.second_feature not in feature.children]
+            else:
                 # Move its children to the parent at the index of the feature
                 index = parent.children.index(feature)
                 for child in reversed(feature.children):
                     parent.children.insert(index, child)
                     child.parent = parent
             parent.children.remove(feature)
+            self.cfm.constraints = [c for c in self.cfm.constraints if
+                                    c.first_feature != feature and c.second_feature != feature]
             group_created = False
             if len(parent.children) == 0:
                 parent.group_type_cardinality, parent.group_instance_cardinality = Cardinality(
