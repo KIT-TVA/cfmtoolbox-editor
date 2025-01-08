@@ -23,7 +23,7 @@ class ToolTip:
         self.tip_window = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         tw.geometry(f"+{x}+{y}")
-        label = tk.Label(
+        label = ttk.Label(
             tw, text=text, justify=tk.LEFT,
             background="#ffffe0", relief=tk.SOLID, borderwidth=1,
             font=("tahoma", "8", "normal")
