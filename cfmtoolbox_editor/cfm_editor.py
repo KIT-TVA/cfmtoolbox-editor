@@ -22,8 +22,12 @@ class CFMEditorApp:
 
         self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
         self.positions = {}
+
         self.last_hovered_cell = (None, None)  # (row, column) for constraints tooltip
         self.constraint_mapping = {}  # Mapping of constraint treeview items to constraints
+
+        self.info_label = None
+        self.cancel_button_window = None
 
         self._setup_ui()
 
@@ -394,7 +398,6 @@ class CFMEditorApp:
                 messagebox.showerror("Selection Error", "Please click on a feature.")
                 return
 
-            # TODO: Check that features are not the same
             clicked_tags = self.canvas.gettags(clicked_item[0])
             second_feature_name = next(
                 (tag for tag in clicked_tags if tag in (feat.name for feat in self.cfm.features)), None)
@@ -404,11 +407,21 @@ class CFMEditorApp:
                 messagebox.showerror("Selection Error", "Please click on a feature.")
                 return
 
+            self.canvas.delete(self.info_label)
+            self.canvas.delete(self.cancel_button_window)
             self.canvas.unbind("<Button-1>")
             self.constraint_dialog(first_feature=feature, second_feature=second_feature)
 
-        messagebox.showinfo("Select Feature", "Click on the second feature to define the constraint.")
+        self.info_label = self.canvas.create_text(400, 15, text="Click on the second feature to define the constraint.",
+                                                  fill="black", font=("Arial", 12))
+        cancel_button = ttk.Button(self.root, text="Cancel", command=self.cancel_add_constraint)
+        self.cancel_button_window = self.canvas.create_window(650, 15, window=cancel_button)
         self.canvas.bind("<Button-1>", on_canvas_click)
+
+    def cancel_add_constraint(self):
+        self.canvas.delete(self.info_label)
+        self.canvas.delete(self.cancel_button_window)
+        self.canvas.unbind("<Button-1>")
 
     def edit_constraint(self, constraint):
         self.constraint_dialog(constraint=constraint)
