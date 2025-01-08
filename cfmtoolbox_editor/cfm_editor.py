@@ -28,6 +28,7 @@ class CFMEditorApp:
 
         self.info_label = None
         self.cancel_button_window = None
+        self.currently_highlighted_feature = None
 
         self._setup_ui()
 
@@ -141,12 +142,13 @@ class CFMEditorApp:
     # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
         x, y = self.positions[id(feature)].x, self.positions[id(feature)].y
-        node_id = self.canvas.create_text(x, y, text=feature.name, tags=feature.name)
+        node_id = self.canvas.create_text(x, y, text=feature.name, tags=(f"feature_text:{feature.name}", feature.name))
         bbox = self.canvas.bbox(node_id)
         padding_x = 4
         padding_y = 2
         padded_bbox = (bbox[0] - padding_x, bbox[1] - padding_y, bbox[2] + padding_x, bbox[3] + padding_y)
-        rect_id = self.canvas.create_rectangle(padded_bbox, fill="lightgrey")
+        rect_id = self.canvas.create_rectangle(padded_bbox, fill="lightgrey",
+                                               tags=(f"feature_rect:{feature.name}", feature.name))
         self.canvas.tag_raise(node_id, rect_id)
 
         if not feature == self.cfm.root:
@@ -392,6 +394,11 @@ class CFMEditorApp:
         dialog.wait_window(dialog)
 
     def add_constraint(self, feature):
+        feature_node = self.canvas.find_withtag(f"feature_rect:{feature.name}")
+        if feature_node:
+            self.canvas.itemconfig(feature_node[0], fill="lightblue")
+            self.currently_highlighted_feature = feature
+
         def on_canvas_click(event):
             clicked_item = self.canvas.find_withtag("current")
             if not clicked_item:
@@ -407,9 +414,7 @@ class CFMEditorApp:
                 messagebox.showerror("Selection Error", "Please click on a feature.")
                 return
 
-            self.canvas.delete(self.info_label)
-            self.canvas.delete(self.cancel_button_window)
-            self.canvas.unbind("<Button-1>")
+            self.cancel_add_constraint()
             self.constraint_dialog(first_feature=feature, second_feature=second_feature)
 
         self.info_label = self.canvas.create_text(400, 15, text="Click on the second feature to define the constraint.",
@@ -422,6 +427,11 @@ class CFMEditorApp:
         self.canvas.delete(self.info_label)
         self.canvas.delete(self.cancel_button_window)
         self.canvas.unbind("<Button-1>")
+        if self.currently_highlighted_feature:
+            feature_node = self.canvas.find_withtag(f"feature_rect:{self.currently_highlighted_feature.name}")
+            if feature_node:
+                self.canvas.itemconfig(feature_node[0], fill="lightgrey")
+            self.currently_highlighted_feature = None
 
     def edit_constraint(self, constraint):
         self.constraint_dialog(constraint=constraint)
