@@ -166,7 +166,7 @@ class CFMEditorApp:
 
             feature_instance_y = padded_bbox[1] - 10
             # TODO: The brackets don't look nice
-            feature_instance_id = self.canvas.create_text(feature_instance_x, feature_instance_y,
+            self.canvas.create_text(feature_instance_x, feature_instance_y,
                                                           text=cardinality_to_display_str(feature.instance_cardinality,
                                                                                           "<",
                                                                                           ">"),
@@ -197,7 +197,7 @@ class CFMEditorApp:
             for i, child in enumerate(feature.children):
                 new_x = self.positions[id(child)].x
                 new_y = self.positions[id(child)].y
-                edge_id = self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
+                self.canvas.create_line(x, y + 10, new_x, new_y - 10, tags="edge", arrow=tk.LAST)
 
                 # Calculate angles for the group arc and adjust to canvas coordinate system
                 if i == 0:
@@ -219,12 +219,12 @@ class CFMEditorApp:
                 self.draw_feature(child, child_feature_instance_card_pos)
 
             if len(feature.children) > 1:
-                arc_id = self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
+                self.canvas.create_arc(x_center - arc_radius, y_center - arc_radius, x_center + arc_radius,
                                                 y_center + arc_radius, fill="white", style=tk.PIESLICE, tags="arc",
                                                 start=left_angle, extent=right_angle - left_angle)
                 # bbox[3] is the y-coordinate of the bottom of the text box
                 group_type_y = padded_bbox[3] + 10
-                group_type_id = self.canvas.create_text(x, group_type_y,
+                self.canvas.create_text(x, group_type_y,
                                                         text=cardinality_to_display_str(feature.group_type_cardinality,
                                                                                         "[",
                                                                                         "]"),
