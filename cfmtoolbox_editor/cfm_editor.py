@@ -66,16 +66,19 @@ class CFMEditorApp:
         constraints_frame = ttk.Frame(main_frame)
         constraints_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
 
+        # Verwende grid für Label und Button
         constraints_label = ttk.Label(constraints_frame, text="Constraints", font=("Arial", 12, "bold"))
-        constraints_label.pack(side=tk.TOP, pady=5)
+        constraints_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+
+        add_constraint_button = ttk.Button(constraints_frame, text="Add constraint", command=self.constraint_dialog)
+        add_constraint_button.grid(row=0, column=1, padx=10, pady=5, sticky="e")
 
         self.constraints_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL)
-        self.constraints_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self.constraints_scroll.grid(row=1, column=2, sticky="ns")
 
         self.constraints_tree = ttk.Treeview(constraints_frame, columns=(
             "First Feature", "First Cardinality", "Type", "Second Feature", "Second Cardinality", "Edit", "Delete"),
-                                             show="tree",
-                                             height=4)
+                                             show="tree", height=4)
         self.constraints_tree.column("First Feature", anchor=tk.E, width=120)
         self.constraints_tree.column("First Cardinality", anchor=tk.W, width=100)
         self.constraints_tree.column("Type", anchor=tk.CENTER, width=60)
@@ -83,13 +86,14 @@ class CFMEditorApp:
         self.constraints_tree.column("Second Cardinality", anchor=tk.W, width=100)
         self.constraints_tree.column("Edit", anchor=tk.CENTER, width=50)
         self.constraints_tree.column("Delete", anchor=tk.CENTER, width=50)
-        self.constraints_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.constraints_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5)
 
         self.constraints_tree.config(yscrollcommand=self.constraints_scroll.set)
         self.constraints_scroll.config(command=self.constraints_tree.yview)
 
-        add_constraint_button = ttk.Button(constraints_frame, text="Add constraint", command=self.constraint_dialog)
-        add_constraint_button.pack(side=tk.RIGHT, padx=10, pady=5)
+        constraints_frame.columnconfigure(0, weight=1)
+        constraints_frame.columnconfigure(1, weight=0)
+        constraints_frame.rowconfigure(1, weight=1)
 
         self.constraints_tree.bind("<Button-1>", self.on_constraints_click)
 
@@ -319,6 +323,9 @@ class CFMEditorApp:
                 return
             first_feature = self.get_feature_by_name(selected_first_feature)
             second_feature = self.get_feature_by_name(selected_second_feature)
+            if first_feature == second_feature:
+                messagebox.showerror("Input Error", "The first and second features cannot be the same.")
+                return
 
             raw_first_card = first_card_var.get().strip()
             raw_second_card = second_card_var.get().strip()
