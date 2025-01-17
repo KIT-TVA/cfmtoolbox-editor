@@ -66,7 +66,6 @@ class CFMEditorApp:
         constraints_frame = ttk.Frame(main_frame)
         constraints_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
 
-        # Verwende grid für Label und Button
         constraints_label = ttk.Label(constraints_frame, text="Constraints", font=("Arial", 12, "bold"))
         constraints_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
 

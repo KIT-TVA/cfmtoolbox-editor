@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from math import ceil
+from math import ceil, floor
 from dataclasses import dataclass
 
 from cfmtoolbox import CFM, Feature
@@ -47,13 +47,18 @@ class GraphLayoutCalculator:
             self._compute_y(child, depth + 1)
 
     def _compute_shift(self, feature: Feature) -> Tuple[List[int], List[int]]:
-        """The shifts are calculated recursively from bottom to top. For each subtree, a contour is calculated that
+        """
+        The shifts are calculated recursively from bottom to top. For each subtree, a contour is calculated that
         describes the left and right boundary of the subtree. These subtrees are then placed as close to each other as
         possible without overlapping. The parent is placed in the middle of the children and the shifts of the children
-        are calculated relative to the parent."""
+        are calculated relative to the parent. The method returns the contour of the subtree and the shift is saved in
+        the according field.
+        :param feature: The current feature to calculate the shift for.
+        :return: The left and right contour of the subtree rooted at the feature.
+        """
         children = feature.children
         if not children or len(children) == 0:
-            return [ceil(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
+            return [floor(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
         else:
             # TODO: Non-neighbouring subtrees can also overlap. Possible solution: Merge subtrees one by one and always
             #  compute new contour.
@@ -77,9 +82,9 @@ class GraphLayoutCalculator:
             accumulated_distance = 0
             for i in range(len(children)):
                 accumulated_distance += d[i]
-                self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
+                self.shift[id(children[i])] = accumulated_distance - floor(total_distance / 2)
 
-            contour_left = [ceil(-self.scale_text * len(feature.name)),
+            contour_left = [floor(-self.scale_text * len(feature.name)),
                             self.shift[id(children[0])] + contours[id(children[0])][0][0] + ceil(
                                 self.scale_text * len(feature.name))]
             old_contour = contours[id(children[0])][0]
