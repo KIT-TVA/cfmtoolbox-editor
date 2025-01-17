@@ -56,63 +56,85 @@ class GraphLayoutCalculator:
         :param feature: The current feature to calculate the shift for.
         :return: The left and right contour of the subtree rooted at the feature.
         """
+        contour_left, contour_right = [floor(-self.scale_text * len(feature.name))], [
+            ceil(self.scale_text * len(feature.name))]
         children = feature.children
         if not children or len(children) == 0:
-            return [floor(-self.scale_text * len(feature.name))], [ceil(self.scale_text * len(feature.name))]
+            return contour_left, contour_right
+
         else:
-            # TODO: Non-neighbouring subtrees can also overlap. Possible solution: Merge subtrees one by one and always
-            #  compute new contour.
-            contours = {}
+            children_contours = {}
             for child in children:
-                contours[id(child)] = self._compute_shift(child)
+                children_contours[id(child)] = self._compute_shift(child)
+
             # d[i] is the distance between the (i-1)-th and the i-th child
             d = [0 for _ in range(len(children))]
+            temporary_right_contour = children_contours[id(children[0])][1]
+            aggregating_left_contour = children_contours[id(children[0])][0]
+
+            # Recursively merge the subtrees from left to right and update the right contour to avoid overlapping
+            # non-neighbouring subtrees.
             for i in range(1, len(children)):
                 sum_left = 0
                 sum_right = 0
+                current_left_contour = children_contours[id(children[i])][0]
+
                 # Make sure the contours never overlap
-                for j in range(0, min(len(contours[id(children[i - 1])][1]), len(contours[id(children[i])][0]))):
-                    sum_left += contours[id(children[i])][0][j]
-                    sum_right += contours[id(children[i - 1])][1][j]
+                for j in range(0, min(len(temporary_right_contour), len(current_left_contour))):
+                    sum_left += current_left_contour[j]
+                    sum_right += temporary_right_contour[j]
                     d[i] = max(d[i], sum_right - sum_left)
                 # add padding
                 d[i] += 40
+
+                # TODO: Also update left contour
+                # update contours of subtrees merged so far
+                updated_right_contour = children_contours[id(children[i])][1]
+                current_height = len(updated_right_contour)
+                if len(temporary_right_contour) > current_height:
+                    updated_right_contour.append(
+                        -sum(updated_right_contour) - d[i] + sum(temporary_right_contour[0:current_height + 1]))
+                    updated_right_contour.extend(
+                        temporary_right_contour[current_height + 1:len(temporary_right_contour)])
+                temporary_right_contour = updated_right_contour
+
             total_distance = sum(d)
 
             accumulated_distance = 0
             for i in range(len(children)):
                 accumulated_distance += d[i]
-                self.shift[id(children[i])] = accumulated_distance - floor(total_distance / 2)
+                self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
 
+            # TODO: Make use of aggregated and temporary contours
             contour_left = [floor(-self.scale_text * len(feature.name)),
-                            self.shift[id(children[0])] + contours[id(children[0])][0][0] + ceil(
+                            self.shift[id(children[0])] + children_contours[id(children[0])][0][0] + ceil(
                                 self.scale_text * len(feature.name))]
-            old_contour = contours[id(children[0])][0]
+            old_contour = children_contours[id(children[0])][0]
             contour_left.extend(old_contour[1:])
             curr_height = len(contour_left)
             for i in range(1, len(children)):
-                if len(contours[id(children[i])][0]) >= curr_height:
-                    old_contour = contours[id(children[i])][0]
+                if len(children_contours[id(children[i])][0]) >= curr_height:
+                    old_contour = children_contours[id(children[i])][0]
                     contour_left.append(
                         sum(old_contour[0:curr_height]) + self.shift[id(children[i])] - self.shift[
                             id(children[i - 1])] - sum(
-                            contours[id(children[i - 1])][0]))
+                            children_contours[id(children[i - 1])][0]))
                     contour_left.extend(old_contour[curr_height:len(old_contour)])
                     curr_height = len(contour_left)
 
             contour_right = [ceil(self.scale_text * len(feature.name)),
-                             self.shift[id(children[-1])] + contours[id(children[-1])][1][0] - ceil(
+                             self.shift[id(children[-1])] + children_contours[id(children[-1])][1][0] - ceil(
                                  self.scale_text * len(feature.name))]
-            old_contour = contours[id(children[-1])][1]
+            old_contour = children_contours[id(children[-1])][1]
             contour_right.extend(old_contour[1:])
             curr_height = len(contour_right)
             for i in range(len(children) - 2, -1, -1):
-                if len(contours[id(children[i])][1]) >= curr_height:
-                    old_contour = contours[id(children[i])][1]
+                if len(children_contours[id(children[i])][1]) >= curr_height:
+                    old_contour = children_contours[id(children[i])][1]
                     contour_right.append(
                         sum(old_contour[0:curr_height]) + self.shift[id(children[i])] - self.shift[
                             id(children[i - 1])] - sum(
-                            contours[id(children[i - 1])][1]))
+                            children_contours[id(children[i - 1])][1]))
                     contour_right.extend(old_contour[curr_height:len(old_contour)])
                     curr_height = len(contour_right)
 
