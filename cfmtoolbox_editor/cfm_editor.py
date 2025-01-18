@@ -12,6 +12,7 @@ from cfmtoolbox_editor.tooltip import ToolTip
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
 
+from cfmtoolbox_editor.shortcuts import ShortcutManager
 
 class CFMEditorApp:
     def __init__(self):
@@ -19,6 +20,8 @@ class CFMEditorApp:
         self.original_cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
+
+        self.shortcut_manager = ShortcutManager(self)
 
         self.expanded_features: dict[int, bool] = {}  # Dictionary to track expanded/collapsed state of features
         self.positions: dict[int, Point] = {}
