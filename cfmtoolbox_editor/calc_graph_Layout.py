@@ -18,9 +18,12 @@ class GraphLayoutCalculator:
     An adaption had to be made to account for the different lengths of feature names.
     """
 
-    def __init__(self, cfm: CFM):
+    def __init__(self, cfm: CFM, expanded_features: dict[int, bool]):
         self.cfm = cfm
         """The feature model to calculate the layout for."""
+
+        self.expanded_features = expanded_features
+        """Only calculate positions for expanded features."""
 
         self.pos = {id(feature): Point(0, 0) for feature in cfm.features}
         """The final positions of the features in the feature model."""
@@ -43,8 +46,9 @@ class GraphLayoutCalculator:
     def _compute_y(self, feature: Feature, depth: int):
         """The leveled y coordinate is calculated by a simple breadth-first traversal."""
         self.pos[id(feature)].y = depth * 100 + 50
-        for child in feature.children:
-            self._compute_y(child, depth + 1)
+        if self.expanded_features[id(feature)]:
+            for child in feature.children:
+                self._compute_y(child, depth + 1)
 
     def _compute_shift(self, feature: Feature) -> Tuple[List[int], List[int]]:
         """
@@ -59,7 +63,7 @@ class GraphLayoutCalculator:
         left_contour, right_contour = [floor(-self.scale_text * len(feature.name))], [
             ceil(self.scale_text * len(feature.name))]
         children = feature.children
-        if not children or len(children) == 0:
+        if not self.expanded_features[id(feature)] or not children or len(children) == 0:
             return left_contour, right_contour
 
         else:
@@ -128,5 +132,7 @@ class GraphLayoutCalculator:
             self.pos[id(feature)].x = 400
         else:
             self.pos[id(feature)].x = self.pos[id(parent)].x + self.shift[id(feature)]
-        for child in feature.children:
-            self._compute_x(child)
+
+        if self.expanded_features[id(feature)]:
+            for child in feature.children:
+                self._compute_x(child)

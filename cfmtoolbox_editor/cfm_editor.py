@@ -7,7 +7,7 @@ from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
-from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
+from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator, Point
 from cfmtoolbox_editor.tooltip import ToolTip
 from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_cardinality, cardinality_to_edit_str, \
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
@@ -20,8 +20,8 @@ class CFMEditorApp:
         self.root = tk.Tk()
         self.root.title("CFM Editor")
 
-        self.expanded_features = {}  # Dictionary to track expanded/collapsed state of features
-        self.positions = {}
+        self.expanded_features: dict[int, bool] = {}  # Dictionary to track expanded/collapsed state of features
+        self.positions: dict[int, Point] = {}
 
         self.last_hovered_cell = (None, None)  # (row, column) for constraints tooltip
         self.constraint_mapping = {}  # Mapping of constraint treeview items to constraints
@@ -129,19 +129,19 @@ class CFMEditorApp:
         self._draw_model()
 
     def _draw_model(self):
-        self.positions = GraphLayoutCalculator(self.cfm).compute_positions()
+        self.positions = GraphLayoutCalculator(self.cfm, self.expanded_features).compute_positions()
         self.canvas.delete("all")
         self.draw_feature(self.cfm.root, "middle")
 
+        # TODO: Does not take into account the sizes of the outermost nodes. Could be solved by a maximum node size.
         min_x = min(pos.x for pos in self.positions.values())
-        min_y = min(pos.y for pos in self.positions.values())
         max_x = max(pos.x for pos in self.positions.values())
         max_y = max(pos.y for pos in self.positions.values())
 
         padding_x = 100
         padding_y = 50
         self.canvas.config(
-            scrollregion=(min(min_x - padding_x, 0), min_y - padding_y, max_x + padding_x, max_y + padding_y))
+            scrollregion=(min(min_x - padding_x, 0), 0, max_x + padding_x, max_y + padding_y))
 
         self.update_constraints()
 
