@@ -1,4 +1,3 @@
-from email.contentmanager import raw_data_manager
 from math import atan2, degrees
 import tkinter as tk
 from tkinter import ttk
@@ -7,7 +6,6 @@ from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
-from click.termui import raw_terminal
 
 from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator
 from cfmtoolbox_editor.tooltip import ToolTip
