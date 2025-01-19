@@ -31,6 +31,8 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install library
         run: poetry install --no-interaction
+      - name: Format Code
+        run: poetry run ruff check cfmtoolbox_editor tests --fix
       - name: Lint
         run: |
           poetry run ruff check cfmtoolbox_editor tests
