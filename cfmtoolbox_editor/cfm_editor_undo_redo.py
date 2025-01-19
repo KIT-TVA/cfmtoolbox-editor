@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+
 class UndoRedoManager:
     def __init__(self):
         self.undo_stack = []

@@ -60,10 +60,16 @@ class GraphLayoutCalculator:
         :param feature: The current feature to calculate the shift for.
         :return: The left and right contour of the subtree rooted at the feature.
         """
-        left_contour, right_contour = [floor(-self.scale_text * len(feature.name))], [
-            ceil(self.scale_text * len(feature.name))]
+        left_contour, right_contour = (
+            [floor(-self.scale_text * len(feature.name))],
+            [ceil(self.scale_text * len(feature.name))],
+        )
         children = feature.children
-        if not self.expanded_features[id(feature)] or not children or len(children) == 0:
+        if (
+            not self.expanded_features[id(feature)]
+            or not children
+            or len(children) == 0
+        ):
             return left_contour, right_contour
 
         else:
@@ -84,7 +90,9 @@ class GraphLayoutCalculator:
                 next_left_contour = children_contours[id(children[i])][0]
 
                 # Make sure the contours never overlap
-                for j in range(0, min(len(current_right_contour), len(next_left_contour))):
+                for j in range(
+                    0, min(len(current_right_contour), len(next_left_contour))
+                ):
                     sum_left += next_left_contour[j]
                     sum_right += current_right_contour[j]
                     d[i] = max(d[i], sum_right - sum_left)
@@ -97,31 +105,52 @@ class GraphLayoutCalculator:
                 if len(current_right_contour) > current_height_right:
                     # old contour still visible
                     new_right_contour.append(
-                        -sum(new_right_contour) - d[i] + sum(current_right_contour[0:current_height_right + 1]))
+                        -sum(new_right_contour)
+                        - d[i]
+                        + sum(current_right_contour[0 : current_height_right + 1])
+                    )
                     new_right_contour.extend(
-                        current_right_contour[current_height_right + 1:len(current_right_contour)])
+                        current_right_contour[
+                            current_height_right + 1 : len(current_right_contour)
+                        ]
+                    )
                 current_right_contour = new_right_contour
 
                 current_height_left = len(current_left_contour)
                 if (len(next_left_contour)) > current_height_left:
                     # new contour visible
                     current_left_contour.append(
-                        -sum(current_left_contour) + d[i] + sum(next_left_contour[0:current_height_left + 1]))
-                    current_left_contour.extend(next_left_contour[current_height_left + 1:len(next_left_contour)])
+                        -sum(current_left_contour)
+                        + d[i]
+                        + sum(next_left_contour[0 : current_height_left + 1])
+                    )
+                    current_left_contour.extend(
+                        next_left_contour[
+                            current_height_left + 1 : len(next_left_contour)
+                        ]
+                    )
 
             total_distance = sum(d)
 
             accumulated_distance = 0
             for i in range(len(children)):
                 accumulated_distance += d[i]
-                self.shift[id(children[i])] = accumulated_distance - ceil(total_distance / 2)
+                self.shift[id(children[i])] = accumulated_distance - ceil(
+                    total_distance / 2
+                )
 
-            left_contour.append(self.shift[id(children[0])] + children_contours[id(children[0])][0][0] + ceil(
-                self.scale_text * len(feature.name)))
+            left_contour.append(
+                self.shift[id(children[0])]
+                + children_contours[id(children[0])][0][0]
+                + ceil(self.scale_text * len(feature.name))
+            )
             left_contour.extend(current_left_contour[1:])
 
-            right_contour.append(self.shift[id(children[-1])] + children_contours[id(children[-1])][1][0] - ceil(
-                self.scale_text * len(feature.name)))
+            right_contour.append(
+                self.shift[id(children[-1])]
+                + children_contours[id(children[-1])][1][0]
+                - ceil(self.scale_text * len(feature.name))
+            )
             right_contour.extend(current_right_contour[1:])
 
             return left_contour, right_contour

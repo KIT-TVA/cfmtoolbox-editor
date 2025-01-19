@@ -2,6 +2,7 @@ import pytest
 from cfmtoolbox import Feature, CFM, Cardinality, Interval, Constraint
 from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
 
+
 @pytest.fixture
 def sandwich_cfm():
     # Root feature mit allen erforderlichen Argumenten
@@ -11,7 +12,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(2, 7)]),
         group_instance_cardinality=Cardinality([Interval(2, 7)]),
         parent=None,
-        children=[]
+        children=[],
     )
 
     # Bread feature
@@ -21,7 +22,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(1, 1)]),  # alternative
         group_instance_cardinality=Cardinality([Interval(1, 1)]),
         parent=sandwich,
-        children=[]
+        children=[],
     )
 
     # Bread types
@@ -31,7 +32,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(0, 0)]),
         group_instance_cardinality=Cardinality([Interval(0, 0)]),
         parent=bread,
-        children=[]
+        children=[],
     )
 
     wheat = Feature(
@@ -40,7 +41,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(0, 0)]),
         group_instance_cardinality=Cardinality([Interval(0, 0)]),
         parent=bread,
-        children=[]
+        children=[],
     )
 
     veggies = Feature(
@@ -49,7 +50,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(1, 2)]),  # or
         group_instance_cardinality=Cardinality([Interval(1, 2)]),
         parent=sandwich,
-        children=[]
+        children=[],
     )
 
     # Veggies types
@@ -59,7 +60,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(0, 0)]),
         group_instance_cardinality=Cardinality([Interval(0, 0)]),
         parent=veggies,
-        children=[]
+        children=[],
     )
 
     # Cheese feature mit Kindern
@@ -69,7 +70,7 @@ def sandwich_cfm():
         group_type_cardinality=Cardinality([Interval(1, 3)]),  # or
         group_instance_cardinality=Cardinality([Interval(1, 3)]),
         parent=sandwich,
-        children=[]
+        children=[],
     )
 
     veggies.children = [lettuce]
@@ -82,18 +83,19 @@ def sandwich_cfm():
             first_cardinality=Cardinality([Interval(1, None)]),
             second_feature=lettuce,
             second_cardinality=Cardinality([Interval(1, None)]),
-            require=True  # Hinzugefügt: require Parameter
+            require=True,  # Hinzugefügt: require Parameter
         ),
         Constraint(
             first_feature=cheesemix,
             first_cardinality=Cardinality([Interval(1, None)]),
             second_feature=sourdough,
             second_cardinality=Cardinality([Interval(1, None)]),
-            require=True  # Hinzugefügt: require Parameter
-        )
+            require=True,  # Hinzugefügt: require Parameter
+        ),
     ]
 
     return CFM(root=sandwich, constraints=constraints)
+
 
 class TestUndoRedoManager:
     """Test class for UndoRedoManager"""
@@ -149,17 +151,21 @@ class TestUndoRedoManager:
             group_type_cardinality=Cardinality([Interval(1, 1)]),
             group_instance_cardinality=Cardinality([Interval(1, 1)]),
             parent=self.sandwich_cfm.root,
-            children=[]
+            children=[],
         )
         self.sandwich_cfm.root.children.append(new_feature)
         manager.add_state(self.sandwich_cfm)
 
         # Undo both changes
         assert manager.undo().root.children[-1].name != "Cheese"  # Undo addition
-        assert manager.undo().root.children[0].instance_cardinality.intervals[0].upper == 2  # Undo cardinality change
+        assert (
+            manager.undo().root.children[0].instance_cardinality.intervals[0].upper == 2
+        )  # Undo cardinality change
 
         # Redo both changes
-        assert manager.redo().root.children[0].instance_cardinality.intervals[0].upper == 3  # Redo cardinality change
+        assert (
+            manager.redo().root.children[0].instance_cardinality.intervals[0].upper == 3
+        )  # Redo cardinality change
         assert manager.redo().root.children[-1].name == "Cheese"  # Redo addition
 
     def test_clear_redo_stack_on_new_state_sandwich_cfm(self, sandwich_cfm):
@@ -210,14 +216,16 @@ class TestUndoRedoManager:
 
         # Add multiple features
         for i in range(10):
-            self.sandwich_cfm.root.children.append(Feature(
-                name=f"ExtraFeature{i}",
-                instance_cardinality=Cardinality([Interval(1, 1)]),
-                group_type_cardinality=Cardinality([Interval(1, 1)]),
-                group_instance_cardinality=Cardinality([Interval(1, 1)]),
-                parent=self.sandwich_cfm.root,
-                children=[]
-            ))
+            self.sandwich_cfm.root.children.append(
+                Feature(
+                    name=f"ExtraFeature{i}",
+                    instance_cardinality=Cardinality([Interval(1, 1)]),
+                    group_type_cardinality=Cardinality([Interval(1, 1)]),
+                    group_instance_cardinality=Cardinality([Interval(1, 1)]),
+                    parent=self.sandwich_cfm.root,
+                    children=[],
+                )
+            )
             manager.add_state(self.sandwich_cfm)
 
         # Undo all changes
@@ -244,14 +252,16 @@ class TestUndoRedoManager:
 
         # Add multiple features
         for i in range(5):
-            self.sandwich_cfm.root.children.append(Feature(
-                name=f"ExtraFeature{i}",
-                instance_cardinality=Cardinality([Interval(1, 1)]),
-                group_type_cardinality=Cardinality([Interval(1, 1)]),
-                group_instance_cardinality=Cardinality([Interval(1, 1)]),
-                parent=self.sandwich_cfm.root,
-                children=[]
-            ))
+            self.sandwich_cfm.root.children.append(
+                Feature(
+                    name=f"ExtraFeature{i}",
+                    instance_cardinality=Cardinality([Interval(1, 1)]),
+                    group_type_cardinality=Cardinality([Interval(1, 1)]),
+                    group_instance_cardinality=Cardinality([Interval(1, 1)]),
+                    parent=self.sandwich_cfm.root,
+                    children=[],
+                )
+            )
             manager.add_state(self.sandwich_cfm)
 
         # Perform alternating undo and redo cycles
@@ -274,32 +284,44 @@ class TestUndoRedoManager:
         cheesemix = self.sandwich_cfm.root.children.pop(1)
         manager.add_state(self.sandwich_cfm)
         assert len(self.sandwich_cfm.root.children) == 2
-        assert all(child.name != "Cheesemix" for child in self.sandwich_cfm.root.children)
+        assert all(
+            child.name != "Cheesemix" for child in self.sandwich_cfm.root.children
+        )
 
         # Step 2: Undo the deletion
         self.sandwich_cfm = manager.undo()
         assert len(self.sandwich_cfm.root.children) == 3
-        assert any(child.name == "Cheesemix" for child in self.sandwich_cfm.root.children)
+        assert any(
+            child.name == "Cheesemix" for child in self.sandwich_cfm.root.children
+        )
 
         # Step 3: Redo the deletion
         self.sandwich_cfm = manager.redo()
         assert len(self.sandwich_cfm.root.children) == 2
-        assert all(child.name != "Cheesemix" for child in self.sandwich_cfm.root.children)
+        assert all(
+            child.name != "Cheesemix" for child in self.sandwich_cfm.root.children
+        )
 
         # Step 4: Undo the deletion again
         self.sandwich_cfm = manager.undo()
         assert len(self.sandwich_cfm.root.children) == 3
-        assert any(child.name == "Cheesemix" for child in self.sandwich_cfm.root.children)
+        assert any(
+            child.name == "Cheesemix" for child in self.sandwich_cfm.root.children
+        )
 
         # Step 5: Add a child to Cheesemix
-        cheesemix = next(child for child in self.sandwich_cfm.root.children if child.name == "Cheesemix")
+        cheesemix = next(
+            child
+            for child in self.sandwich_cfm.root.children
+            if child.name == "Cheesemix"
+        )
         new_child = Feature(
             name="NewChild",
             instance_cardinality=Cardinality([Interval(1, 1)]),
             group_type_cardinality=Cardinality([Interval(1, 1)]),
             group_instance_cardinality=Cardinality([Interval(1, 1)]),
             parent=cheesemix,
-            children=[]
+            children=[],
         )
         cheesemix.children.append(new_child)
         manager.add_state(self.sandwich_cfm)
@@ -307,5 +329,9 @@ class TestUndoRedoManager:
 
         # Step 6: Undo the addition of the child
         self.sandwich_cfm = manager.undo()
-        cheesemix = next(child for child in self.sandwich_cfm.root.children if child.name == "Cheesemix")
+        cheesemix = next(
+            child
+            for child in self.sandwich_cfm.root.children
+            if child.name == "Cheesemix"
+        )
         assert len(cheesemix.children) == 0
