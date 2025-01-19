@@ -62,7 +62,6 @@ class ShortcutManager:
     def _handle_reset(self, event):
         if hasattr(self.editor, "_reset_model"):
             self.editor._reset_model()
-            print("Reset-Tastenkürzel ausgelöst")
 
     def _handle_undo(self, event):
         if hasattr(self.editor, "_undo"):
