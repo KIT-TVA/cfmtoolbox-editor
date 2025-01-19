@@ -307,6 +307,12 @@ class CFMEditorApp:
             lambda event, f=feature: self.on_right_click_node(event, f),
         )
 
+        self.canvas.tag_bind(
+            node_id,
+            "<Button-1>",
+            lambda event, f=feature: self.on_left_click_node(event, f),
+        )
+
         # Recursively draw children if expanded
         if feature.children and self.expanded_features.get(id(feature), True):
             # arc for group
@@ -684,6 +690,17 @@ class CFMEditorApp:
             label="Add Constraint", command=lambda: self.add_constraint(feature)
         )
         menu.post(event.x_root, event.y_root)
+
+    def on_left_click_node(self, event, feature):
+        if self.currently_highlighted_feature:
+            previous_node = self.canvas.find_withtag(f"feature_rect:{self.currently_highlighted_feature.name}")
+            if previous_node:
+                self.canvas.itemconfig(previous_node[0], fill="lightgrey")
+
+        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
+        if node_id:
+            self.canvas.itemconfig(node_id[0], fill="lightblue")
+            self.currently_highlighted_feature = feature
 
     def add_feature(self, parent):
         self.show_feature_dialog(parent=parent)
