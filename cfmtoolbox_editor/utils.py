@@ -42,9 +42,9 @@ def edit_str_to_cardinality(raw_cardinality: str) -> Cardinality:
     """
     intervals = []
     for interval in raw_cardinality.split(";"):
-        min_card, max_card = interval.split(",")
-        min_card = int(min_card.strip())
-        max_card = None if max_card.strip() == "*" else int(max_card.strip())
+        min_str, max_str = interval.split(",")
+        min_card = int(min_str.strip())
+        max_card = None if max_str.strip() == "*" else int(max_str.strip())
         intervals.append(Interval(min_card, max_card))
     return Cardinality(intervals)
 
