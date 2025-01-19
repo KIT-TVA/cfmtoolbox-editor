@@ -7,6 +7,11 @@ class ShortcutManager:
         self._define_shortcuts()
         self._setup_shortcuts()
 
+    def update_editor(self, editor_app):
+        """Update the editor_app instance."""
+        self.editor = editor_app
+        self._setup_shortcuts()
+
     def _setup_shortcuts(self):
         root = self.editor.root
         root.bind(self.shortcuts['NEW_CONSTRAINT'], self._handle_new)
@@ -14,6 +19,8 @@ class ShortcutManager:
         root.bind(self.shortcuts['DELETE_CONSTRAINT'], self._handle_delete)
         root.bind(self.shortcuts['SAVE'], self._handle_save)
         root.bind(self.shortcuts['RESET'], self._handle_reset)
+        root.bind(self.shortcuts['UNDO'], self._handle_undo)
+        root.bind(self.shortcuts['REDO'], self._handle_redo)
 
     def _define_shortcuts(self):
         print("Define Shortcuts")
@@ -24,6 +31,12 @@ class ShortcutManager:
             'DELETE_CONSTRAINT': '<BackSpace>' if self.is_mac else '<Delete>',
             'SAVE': f'<{base}-s>',
             'RESET': f'<{base}-r>',
+            'UNDO': f'<{base}-z>',
+            'REDO': f'<{base}-y>'
+        }
+        self.accelerators = {
+            'UNDO': f'{base}+z',
+            'REDO': f'{base}+y'
         }
 
     def _handle_new(self, event):
@@ -43,6 +56,14 @@ class ShortcutManager:
             self.editor._save_model()
 
     def _handle_reset(self, event):
-        #if hasattr(self.editor, '_reset_model'):
+        if hasattr(self.editor, '_reset_model'):
             self.editor._reset_model()
             print("Reset-Tastenkürzel ausgelöst")
+
+    def _handle_undo(self, event):
+        if hasattr(self.editor, '_undo'):
+            self.editor._undo()
+
+    def _handle_redo(self, event):
+        if hasattr(self.editor, '_redo'):
+            self.editor._redo()

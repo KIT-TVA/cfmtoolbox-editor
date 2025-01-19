@@ -13,6 +13,7 @@ from cfmtoolbox_editor.utils import cardinality_to_display_str, edit_str_to_card
     derive_parent_group_cards_for_one_child, derive_parent_group_cards_for_multiple_children
 
 from cfmtoolbox_editor.shortcuts import ShortcutManager
+from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
 
 class CFMEditorApp:
     def __init__(self):
@@ -21,6 +22,7 @@ class CFMEditorApp:
         self.root = tk.Tk()
         self.root.title("CFM Editor")
 
+        self.undo_redo = UndoRedoManager()
         self.shortcut_manager = ShortcutManager(self)
 
         self.expanded_features: dict[int, bool] = {}  # Dictionary to track expanded/collapsed state of features
@@ -40,7 +42,7 @@ class CFMEditorApp:
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
         self._initialize_feature_states(self.cfm.root)
-        self._draw_model()
+        self._update_model_state()
         self.root.mainloop()
         return self.cfm
 
@@ -52,6 +54,16 @@ class CFMEditorApp:
     def _setup_ui(self):
         main_frame = ttk.Frame(self.root, width=800, height=600)
         main_frame.pack(expand=True, fill=tk.BOTH)
+
+        # Create Menu Bar
+        menubar = Menu(self.root)
+        self.root.config(menu=menubar)
+
+        # Edit Menu
+        edit_menu = Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Edit", menu=edit_menu)
+        edit_menu.add_command(label="Undo", command=self._undo, accelerator=self.shortcut_manager.accelerators['UNDO'])
+        edit_menu.add_command(label="Redo", command=self._redo, accelerator=self.shortcut_manager.accelerators['REDO'])
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
@@ -116,6 +128,9 @@ class CFMEditorApp:
         self.v_scroll.config(command=self.canvas.yview)
         self.h_scroll.config(command=self.canvas.xview)
 
+        # Update the shortcut manager with the new editor instance
+        self.shortcut_manager.update_editor(self)
+
     def _exit_application(self):
         self.root.quit()
 
@@ -129,7 +144,29 @@ class CFMEditorApp:
     def _reset_model(self):
         self.cfm = deepcopy(self.original_cfm)
         self._initialize_feature_states(self.cfm.root)
+        self._update_model_state()
+
+    def _undo(self):
+        previous_state = self.undo_redo.undo()
+        if previous_state:
+            self.cfm = previous_state
+            self._initialize_feature_states(self.cfm.root)
+            self._draw_model()
+            self.update_constraints()
+
+    def _redo(self):
+        next_state = self.undo_redo.redo()
+        if next_state:
+            self.cfm = next_state
+            self._initialize_feature_states(self.cfm.root)
+            self._draw_model()
+            self.update_constraints()
+
+    def _update_model_state(self):
+        # Nach jeder Änderung aufrufen
+        self.undo_redo.add_state(self.cfm)
         self._draw_model()
+        self.update_constraints()
 
     def _draw_model(self):
         self.positions = GraphLayoutCalculator(self.cfm, self.expanded_features).compute_positions()
@@ -146,7 +183,6 @@ class CFMEditorApp:
         self.canvas.config(
             scrollregion=(min(min_x - padding_x, 0), 0, max_x + padding_x, max_y + padding_y))
 
-        self.update_constraints()
 
     # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
@@ -482,7 +518,7 @@ class CFMEditorApp:
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(id(feature), True)
-        self._draw_model()
+        self._update_model_state()
 
     def on_right_click_node(self, event, feature):
         menu = Menu(self.root, tearoff=0)
@@ -510,7 +546,7 @@ class CFMEditorApp:
                 feature.parent.children.remove(feature)
                 self.cfm.constraints = [c for c in self.cfm.constraints if
                                         c.first_feature != feature and c.second_feature != feature]
-                self._draw_model()
+                self._update_model_state()
 
         # inner node
         else:
@@ -547,7 +583,7 @@ class CFMEditorApp:
                     [child.instance_cardinality for child in parent.children])
                 group_created = True
 
-            self._draw_model()
+            self._update_model_state()
             dialog.destroy()
             if group_created:
                 messagebox.showinfo("Group Created",
@@ -645,7 +681,7 @@ class CFMEditorApp:
                     parent.group_type_cardinality, parent.group_instance_cardinality = derive_parent_group_cards_for_multiple_children(
                         [child.instance_cardinality for child in parent.children])
 
-            self._draw_model()
+            self._update_model_state()
             dialog.destroy()
             if group_created:
                 messagebox.showinfo("Group Created",
