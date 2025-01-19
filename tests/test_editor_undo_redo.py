@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 from cfmtoolbox import Feature, CFM, Cardinality, Interval, Constraint
 from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
 
