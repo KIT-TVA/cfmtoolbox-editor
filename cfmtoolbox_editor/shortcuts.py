@@ -40,19 +40,27 @@ class ShortcutManager:
         self.accelerators = {"UNDO": f"{base}+z", "REDO": f"{base}+y"}
 
     def _handle_add_feature(self, event):
-        if self.editor.currently_highlighted_feature and hasattr(self.editor, "add_feature"):
+        if self.editor.currently_highlighted_feature and hasattr(
+            self.editor, "add_feature"
+        ):
             self.editor.add_feature(self.editor.currently_highlighted_feature)
 
     def _handle_edit(self, event):
-        if self.editor.currently_highlighted_feature and hasattr(self.editor, "edit_feature"):
+        if self.editor.currently_highlighted_feature and hasattr(
+            self.editor, "edit_feature"
+        ):
             self.editor.edit_feature(self.editor.currently_highlighted_feature)
 
     def _handle_delete(self, event):
-        if self.editor.currently_highlighted_feature and hasattr(self.editor, "delete_feature"):
+        if self.editor.currently_highlighted_feature and hasattr(
+            self.editor, "delete_feature"
+        ):
             self.editor.delete_feature(self.editor.currently_highlighted_feature)
 
     def _handle_add_constraint(self, event):
-        if self.editor.currently_highlighted_feature and hasattr(self.editor, "add_constraint"):
+        if self.editor.currently_highlighted_feature and hasattr(
+            self.editor, "add_constraint"
+        ):
             self.editor.add_constraint(self.editor.currently_highlighted_feature)
 
     def _handle_save(self, event):

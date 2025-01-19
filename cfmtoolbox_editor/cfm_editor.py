@@ -693,7 +693,9 @@ class CFMEditorApp:
 
     def on_left_click_node(self, event, feature):
         if self.currently_highlighted_feature:
-            previous_node = self.canvas.find_withtag(f"feature_rect:{self.currently_highlighted_feature.name}")
+            previous_node = self.canvas.find_withtag(
+                f"feature_rect:{self.currently_highlighted_feature.name}"
+            )
             if previous_node:
                 self.canvas.itemconfig(previous_node[0], fill="lightgrey")
 
