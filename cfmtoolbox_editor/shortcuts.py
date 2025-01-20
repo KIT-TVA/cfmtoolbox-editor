@@ -15,9 +15,9 @@ class ShortcutManager:
 
     def _setup_shortcuts(self):
         root = self.editor.root
-        root.bind(self.shortcuts["NEW_CONSTRAINT"], self._handle_add_feature)
-        root.bind(self.shortcuts["EDIT_CONSTRAINT"], self._handle_edit)
-        root.bind(self.shortcuts["DELETE_CONSTRAINT"], self._handle_delete)
+        root.bind(self.shortcuts["ADD_FEATURE"], self._handle_add_feature)
+        root.bind(self.shortcuts["EDIT_FEATURE"], self._handle_edit)
+        root.bind(self.shortcuts["DELETE_FEATURE"], self._handle_delete)
         root.bind(self.shortcuts["ADD_CONSTRAINT"], self._handle_add_constraint)
         root.bind(self.shortcuts["SAVE"], self._handle_save)
         root.bind(self.shortcuts["RESET"], self._handle_reset)
@@ -28,16 +28,25 @@ class ShortcutManager:
         print("Define Shortcuts")
         base = "Command" if self.is_mac else "Control"
         self.shortcuts = {
-            "NEW_CONSTRAINT": f"<{base}-n>",
-            "EDIT_CONSTRAINT": f"<{base}-e>",
-            "DELETE_CONSTRAINT": "<BackSpace>" if self.is_mac else "<Delete>",
+            "ADD_FEATURE": f"<{base}-n>",
+            "EDIT_FEATURE": f"<{base}-e>",
+            "DELETE_FEATURE": "<BackSpace>" if self.is_mac else "<Delete>",
             "ADD_CONSTRAINT": f"<{base}-a>",
             "SAVE": f"<{base}-s>",
             "RESET": f"<{base}-r>",
             "UNDO": f"<{base}-z>",
             "REDO": f"<{base}-y>",
         }
-        self.accelerators = {"UNDO": f"{base}+z", "REDO": f"{base}+y"}
+        self.accelerators = {
+            "ADD_FEATURE": f"{base}+n",
+            "EDIT_FEATURE": f"{base}+e",
+            "DELETE_FEATURE": "BackSpace" if self.is_mac else "Delete",
+            "ADD_CONSTRAINT": f"{base}+a",
+            "SAVE": f"{base}+s",
+            "RESET": f"{base}+r",
+            "UNDO": f"{base}+z",
+            "REDO": f"{base}+y",
+        }
 
     def _handle_add_feature(self, event):
         if self.editor.currently_highlighted_feature and hasattr(
