@@ -25,7 +25,6 @@ class ShortcutManager:
         root.bind(self.shortcuts["REDO"], self._handle_redo)
 
     def _define_shortcuts(self):
-        print("Define Shortcuts")
         base = "Command" if self.is_mac else "Control"
         self.shortcuts = {
             "ADD_FEATURE": f"<{base}-n>",

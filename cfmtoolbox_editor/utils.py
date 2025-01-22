@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 from cfmtoolbox import Cardinality, Interval
 
 
@@ -51,7 +53,7 @@ def edit_str_to_cardinality(raw_cardinality: str) -> Cardinality:
 
 def derive_parent_group_cards_for_one_child(
     child_instance_card: Cardinality,
-) -> (Cardinality, Cardinality):
+) -> Tuple[Cardinality, Cardinality]:
     """
     Derives the parent group cardinalities from the only child's instance cardinality. Group type cardinality is 0 if
     the child can have 0 instances, 1 otherwise. Group instance cardinality is the same as the child's instance
@@ -70,8 +72,8 @@ def derive_parent_group_cards_for_one_child(
 
 
 def derive_parent_group_cards_for_multiple_children(
-    child_instance_cards: [Cardinality],
-) -> (Cardinality, Cardinality):
+        child_instance_cards: List[Cardinality],
+) -> Tuple[Cardinality, Cardinality]:
     """
     Derives the parent group cardinalities from the instance cardinalities of multiple children. Group type cardinality
     is [mandatory children, all children]. Group instance cardinality is <sum of minimum lower bounds, sum of maximum
@@ -100,7 +102,7 @@ def derive_parent_group_cards_for_multiple_children(
             for interval in card.intervals
         )
         else sum(
-            max(interval.upper for interval in card.intervals)
+            max(interval.upper for interval in card.intervals if interval.upper is not None)
             for card in child_instance_cards
             if card.intervals
         )

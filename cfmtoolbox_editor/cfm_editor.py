@@ -4,6 +4,7 @@ from tkinter import ttk
 from copy import deepcopy
 from tkinter import Menu, Toplevel, Label, Entry, Button, StringVar, messagebox
 from tkinter.font import Font
+from typing import Dict, Tuple
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
@@ -28,16 +29,14 @@ class CFMEditorApp:
         self.root = tk.Tk()
         self.root.title("CFM Editor")
 
-        self.undo_redo = UndoRedoManager()
+        self.undo_redo_manager = UndoRedoManager()
         self.shortcut_manager = ShortcutManager(self)
 
-        self.expanded_features: dict[
-            int, bool
-        ] = {}  # Dictionary to track expanded/collapsed state of features
-        self.positions: dict[int, Point] = {}
+        self.expanded_features: Dict[int, bool] = {}  # Dictionary to track expanded/collapsed state of features
+        self.positions: Dict[int, Point] = {}
 
-        self.last_hovered_cell = (None, None)  # (row, column) for constraints tooltip
-        self.constraint_mapping = {}  # Mapping of constraint treeview items to constraints
+        self.last_hovered_cell: Tuple[str | None, str | None] = (None, None)  # (row, column) for constraints tooltip
+        self.constraint_mapping: Dict[str, Constraint] = {}  # Mapping of constraint treeview items to constraints
 
         self.info_label = None
         self.cancel_button_window = None
@@ -45,7 +44,7 @@ class CFMEditorApp:
 
         self._setup_ui()
 
-    def start(self, cfm) -> CFM:
+    def start(self, cfm: CFM) -> CFM:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
         self.original_cfm = deepcopy(cfm)
@@ -235,7 +234,7 @@ class CFMEditorApp:
         self._update_model_state()
 
     def _undo(self):
-        previous_state = self.undo_redo.undo()
+        previous_state = self.undo_redo_manager.undo()
         if previous_state:
             self.cfm = previous_state
             self._initialize_feature_states(self.cfm.root)
@@ -243,7 +242,7 @@ class CFMEditorApp:
             self.update_constraints()
 
     def _redo(self):
-        next_state = self.undo_redo.redo()
+        next_state = self.undo_redo_manager.redo()
         if next_state:
             self.cfm = next_state
             self._initialize_feature_states(self.cfm.root)
@@ -252,7 +251,7 @@ class CFMEditorApp:
 
     def _update_model_state(self):
         # Nach jeder Änderung aufrufen
-        self.undo_redo.add_state(self.cfm)
+        self.undo_redo_manager.add_state(self.cfm)
         self._draw_model()
         self.update_constraints()
 
@@ -362,8 +361,8 @@ class CFMEditorApp:
             arc_radius = 25
             x_center = x
             y_center = y + 10
-            left_angle = 180
-            right_angle = 360
+            left_angle = 180.0
+            right_angle = 360.0
 
             for i, child in enumerate(feature.children):
                 new_x = self.positions[id(child)].x
@@ -425,12 +424,11 @@ class CFMEditorApp:
 
     def update_constraints(self):
         # delete old entries
-        for constraint in self.constraints_tree.get_children():
-            self.constraints_tree.delete(constraint)
+        self.constraints_tree.delete(*self.constraints_tree.get_children())
         self.constraint_mapping = {}
 
         # add current constraints
-        for constraint in self.cfm.constraints:
+        for constraint in self.cfm.constraints:  # type: Constraint
             constraint_id = self.constraints_tree.insert(
                 "",
                 "end",
@@ -780,6 +778,10 @@ class CFMEditorApp:
     def show_delete_dialog(self, feature: Feature):
         def submit(delete_subtree: bool):
             parent = feature.parent
+            if not parent:
+                messagebox.showerror("Error", "Cannot delete root feature.")
+                dialog.destroy()
+                return
             former_number_of_children = len(parent.children)
             if delete_subtree:
                 # Remove all constraints that contain one of the children of the feature
@@ -863,7 +865,7 @@ class CFMEditorApp:
         dialog.wait_window(dialog)
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
-    def show_feature_dialog(self, parent: Feature = None, feature: Feature = None):
+    def show_feature_dialog(self, parent: Feature | None = None, feature: Feature | None = None):
         def on_submit():
             feature_name = name_var.get().strip()
             if not feature_name:
@@ -962,12 +964,12 @@ class CFMEditorApp:
         dialog.title("Edit Feature" if feature else "Add Feature")
 
         is_edit = feature is not None
-        is_group = is_edit and len(feature.children) > 1
-        is_only_child = is_edit and feature.parent and len(feature.parent.children) == 1
+        is_group = feature is not None and len(feature.children) > 1
+        is_only_child = feature is not None and feature.parent and len(feature.parent.children) == 1
 
-        current_name = feature.name if is_edit else ""
+        current_name = feature.name if feature is not None else ""
         current_feature_card = (
-            cardinality_to_edit_str(feature.instance_cardinality) if is_edit else ""
+            cardinality_to_edit_str(feature.instance_cardinality) if feature is not None else ""
         )
 
         Label(dialog, text="Feature Name:").grid(
@@ -984,7 +986,7 @@ class CFMEditorApp:
             row=1, column=1, padx=5, pady=5
         )
 
-        if is_group:
+        if is_group and feature is not None:
             current_group_type_card = cardinality_to_edit_str(
                 feature.group_type_cardinality
             )

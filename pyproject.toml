@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 cfmtoolbox = "^0.3.0"
+pytest = "^8.3.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.4"
