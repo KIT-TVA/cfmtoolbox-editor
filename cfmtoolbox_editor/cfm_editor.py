@@ -32,11 +32,18 @@ class CFMEditorApp:
         self.undo_redo_manager = UndoRedoManager()
         self.shortcut_manager = ShortcutManager(self)
 
-        self.expanded_features: Dict[int, bool] = {}  # Dictionary to track expanded/collapsed state of features
+        self.expanded_features: Dict[
+            int, bool
+        ] = {}  # Dictionary to track expanded/collapsed state of features
         self.positions: Dict[int, Point] = {}
 
-        self.last_hovered_cell: Tuple[str | None, str | None] = (None, None)  # (row, column) for constraints tooltip
-        self.constraint_mapping: Dict[str, Constraint] = {}  # Mapping of constraint treeview items to constraints
+        self.last_hovered_cell: Tuple[str | None, str | None] = (
+            None,
+            None,
+        )  # (row, column) for constraints tooltip
+        self.constraint_mapping: Dict[
+            str, Constraint
+        ] = {}  # Mapping of constraint treeview items to constraints
 
         self.info_label = None
         self.cancel_button_window = None
@@ -865,7 +872,9 @@ class CFMEditorApp:
         dialog.wait_window(dialog)
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
-    def show_feature_dialog(self, parent: Feature | None = None, feature: Feature | None = None):
+    def show_feature_dialog(
+            self, parent: Feature | None = None, feature: Feature | None = None
+    ):
         def on_submit():
             feature_name = name_var.get().strip()
             if not feature_name:
@@ -965,11 +974,15 @@ class CFMEditorApp:
 
         is_edit = feature is not None
         is_group = feature is not None and len(feature.children) > 1
-        is_only_child = feature is not None and feature.parent and len(feature.parent.children) == 1
+        is_only_child = (
+                feature is not None and feature.parent and len(feature.parent.children) == 1
+        )
 
         current_name = feature.name if feature is not None else ""
         current_feature_card = (
-            cardinality_to_edit_str(feature.instance_cardinality) if feature is not None else ""
+            cardinality_to_edit_str(feature.instance_cardinality)
+            if feature is not None
+            else ""
         )
 
         Label(dialog, text="Feature Name:").grid(

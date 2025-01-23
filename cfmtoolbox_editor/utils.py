@@ -102,7 +102,11 @@ def derive_parent_group_cards_for_multiple_children(
             for interval in card.intervals
         )
         else sum(
-            max(interval.upper for interval in card.intervals if interval.upper is not None)
+            max(
+                interval.upper
+                for interval in card.intervals
+                if interval.upper is not None
+            )
             for card in child_instance_cards
             if card.intervals
         )
