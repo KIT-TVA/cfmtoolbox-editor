@@ -72,7 +72,7 @@ def derive_parent_group_cards_for_one_child(
 
 
 def derive_parent_group_cards_for_multiple_children(
-        child_instance_cards: List[Cardinality],
+    child_instance_cards: List[Cardinality],
 ) -> Tuple[Cardinality, Cardinality]:
     """
     Derives the parent group cardinalities from the instance cardinalities of multiple children. Group type cardinality

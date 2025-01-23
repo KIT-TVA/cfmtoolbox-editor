@@ -309,6 +309,7 @@ class CFMEditorApp:
 
         if not feature == self.cfm.root:
             # bbox[1] is the y-coordinate of the top side of the box
+            anchor: str
             match feature_instance_card_pos:
                 case "right":
                     anchor = tk.W
@@ -873,7 +874,7 @@ class CFMEditorApp:
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(
-            self, parent: Feature | None = None, feature: Feature | None = None
+        self, parent: Feature | None = None, feature: Feature | None = None
     ):
         def on_submit():
             feature_name = name_var.get().strip()
@@ -975,7 +976,7 @@ class CFMEditorApp:
         is_edit = feature is not None
         is_group = feature is not None and len(feature.children) > 1
         is_only_child = (
-                feature is not None and feature.parent and len(feature.parent.children) == 1
+            feature is not None and feature.parent and len(feature.parent.children) == 1
         )
 
         current_name = feature.name if feature is not None else ""
