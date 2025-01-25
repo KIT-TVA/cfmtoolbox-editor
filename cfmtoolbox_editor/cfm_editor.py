@@ -20,7 +20,9 @@ from cfmtoolbox_editor.utils.cfm_utils import (
 
 from cfmtoolbox_editor.utils.cfm_shortcuts import ShortcutManager
 from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
+
 from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
+from cfmtoolbox_editor.ui.cfm_buttons import CFMButtons
 
 
 class CFMEditorApp:
@@ -77,18 +79,7 @@ class CFMEditorApp:
         self.root.config(menu=self.menubar.get_menubar())
 
         # Buttons
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(side=tk.BOTTOM, pady=5)
-
-        self.save_button = ttk.Button(
-            button_frame, text="Save", command=self._save_model
-        )
-        self.save_button.pack(side=tk.LEFT, padx=5)
-
-        self.reset_button = ttk.Button(
-            button_frame, text="Reset", command=self._reset_model
-        )
-        self.reset_button.pack(side=tk.LEFT, padx=5)
+        self.buttons = CFMButtons(main_frame, self)
 
         # Constraints
         constraints_frame = ttk.Frame(main_frame)
