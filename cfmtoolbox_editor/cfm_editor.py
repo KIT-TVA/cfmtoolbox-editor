@@ -8,9 +8,9 @@ from typing import Dict, Tuple
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
-from cfmtoolbox_editor.calc_graph_Layout import GraphLayoutCalculator, Point
-from cfmtoolbox_editor.tooltip import ToolTip
-from cfmtoolbox_editor.utils import (
+from cfmtoolbox_editor.utils.cfm_calc_graph_Layout import GraphLayoutCalculator, Point
+from cfmtoolbox_editor.ui.cfm_tooltip import ToolTip
+from cfmtoolbox_editor.utils.utils import (
     cardinality_to_display_str,
     edit_str_to_cardinality,
     cardinality_to_edit_str,
@@ -18,9 +18,9 @@ from cfmtoolbox_editor.utils import (
     derive_parent_group_cards_for_multiple_children,
 )
 
-from cfmtoolbox_editor.shortcuts import ShortcutManager
-from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
-from cfmtoolbox_editor.cfm_menubar import CFMMenuBar
+from cfmtoolbox_editor.utils.cfm_shortcuts import ShortcutManager
+from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
+from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
 
 
 class CFMEditorApp:

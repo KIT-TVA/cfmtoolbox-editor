@@ -1,5 +1,4 @@
 from cfmtoolbox import app, CFM
-
 from cfmtoolbox_editor.cfm_editor import CFMEditorApp
 
 

@@ -1,7 +1,7 @@
 from unittest.mock import Mock, MagicMock
 import pytest
 from tkinter import Menu
-from cfmtoolbox_editor.cfm_menubar import CFMMenuBar
+from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
 
 
 @pytest.fixture
