@@ -20,9 +20,11 @@ from cfmtoolbox_editor.utils.cfm_utils import (
 
 from cfmtoolbox_editor.utils.cfm_shortcuts import ShortcutManager
 from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
+from cfmtoolbox_editor.utils.cfm_click_handler import CFMClickHandler
 
 from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
 from cfmtoolbox_editor.ui.cfm_buttons import CFMButtons
+from cfmtoolbox_editor.ui.cfm_constraints import CFMConstraints
 
 
 class CFMEditorApp:
@@ -51,6 +53,8 @@ class CFMEditorApp:
         self.info_label = None
         self.cancel_button_window = None
         self.currently_highlighted_feature = None
+
+        self.click_handler = CFMClickHandler()
 
         self._setup_ui()
 
@@ -82,55 +86,13 @@ class CFMEditorApp:
         self.buttons = CFMButtons(main_frame, self)
 
         # Constraints
-        constraints_frame = ttk.Frame(main_frame)
-        constraints_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        self.constraints = CFMConstraints(main_frame, self)
+        self.constraints_tree = self.constraints.get_tree()
 
-        constraints_label = ttk.Label(
-            constraints_frame, text="Constraints", font=("Arial", 12, "bold")
+        self.constraints_tooltip = ToolTip(self.constraints.get_constraints_frame())
+        self.constraints_tree.bind(
+            self.click_handler.left_click(), self.on_constraints_click
         )
-        constraints_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-
-        add_constraint_button = ttk.Button(
-            constraints_frame, text="Add constraint", command=self.constraint_dialog
-        )
-        add_constraint_button.grid(row=0, column=1, padx=10, pady=5, sticky="e")
-
-        self.constraints_scroll = ttk.Scrollbar(constraints_frame, orient=tk.VERTICAL)
-        self.constraints_scroll.grid(row=1, column=2, sticky="ns")
-
-        self.constraints_tree = ttk.Treeview(
-            constraints_frame,
-            columns=(
-                "First Feature",
-                "First Cardinality",
-                "Type",
-                "Second Feature",
-                "Second Cardinality",
-                "Edit",
-                "Delete",
-            ),
-            show="tree",
-            height=4,
-        )
-        self.constraints_tree.column("First Feature", anchor=tk.E, width=120)
-        self.constraints_tree.column("First Cardinality", anchor=tk.W, width=100)
-        self.constraints_tree.column("Type", anchor=tk.CENTER, width=60)
-        self.constraints_tree.column("Second Feature", anchor=tk.E, width=120)
-        self.constraints_tree.column("Second Cardinality", anchor=tk.W, width=100)
-        self.constraints_tree.column("Edit", anchor=tk.CENTER, width=50)
-        self.constraints_tree.column("Delete", anchor=tk.CENTER, width=50)
-        self.constraints_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5)
-
-        self.constraints_tree.config(yscrollcommand=self.constraints_scroll.set)
-        self.constraints_scroll.config(command=self.constraints_tree.yview)
-
-        constraints_frame.columnconfigure(0, weight=1)
-        constraints_frame.columnconfigure(1, weight=0)
-        constraints_frame.rowconfigure(1, weight=1)
-
-        self.constraints_tree.bind("<Button-1>", self.on_constraints_click)
-
-        self.constraints_tooltip = ToolTip(constraints_frame)
         self.constraints_tree.bind("<Motion>", self.on_constraints_hover)
         self.constraints_tree.bind("<Leave>", self.on_constraints_leave)
 
@@ -278,23 +240,21 @@ class CFMEditorApp:
                 tags="button",
                 font=Font(weight="bold"),
             )
-            # Button-1 is left mouse button
             self.canvas.tag_bind(
                 button_id,
-                "<Button-1>",
+                self.click_handler.left_click(),
                 lambda event, f=feature: self.toggle_children(event, f),
             )
 
-        # Click event handling (Button-1 is left mouse button, Button-3 is right mouse button)
         self.canvas.tag_bind(
             node_id,
-            "<Button-3>",
+            self.click_handler.right_click(),
             lambda event, f=feature: self.on_right_click_node(event, f),
         )
 
         self.canvas.tag_bind(
             node_id,
-            "<Button-1>",
+            self.click_handler.left_click(),
             lambda event, f=feature: self.on_left_click_node(event, f),
         )
 
@@ -627,12 +587,12 @@ class CFMEditorApp:
         self.cancel_button_window = self.canvas.create_window(
             650, 15, window=cancel_button
         )
-        self.canvas.bind("<Button-1>", on_canvas_click)
+        self.canvas.bind(self.click_handler.left_click(), on_canvas_click)
 
     def cancel_add_constraint(self):
         self.canvas.delete(self.info_label)
         self.canvas.delete(self.cancel_button_window)
-        self.canvas.unbind("<Button-1>")
+        self.canvas.unbind(self.click_handler.left_click())
         if self.currently_highlighted_feature:
             feature_node = self.canvas.find_withtag(
                 f"feature_rect:{self.currently_highlighted_feature.name}"
