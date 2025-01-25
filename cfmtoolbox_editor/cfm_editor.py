@@ -20,6 +20,7 @@ from cfmtoolbox_editor.utils import (
 
 from cfmtoolbox_editor.shortcuts import ShortcutManager
 from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
+from cfmtoolbox_editor.cfm_menubar import CFMMenuBar
 
 
 class CFMEditorApp:
@@ -72,65 +73,8 @@ class CFMEditorApp:
         main_frame.pack(expand=True, fill=tk.BOTH)
 
         # Create Menu Bar
-        menubar = Menu(self.root)
-        self.root.config(menu=menubar)
-
-        # Edit Menu
-        file_menu = Menu(menubar, tearoff=0)
-        edit_menu = Menu(menubar, tearoff=0)
-
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(
-            label="Save",
-            command=self._save_model,
-            accelerator=self.shortcut_manager.accelerators["SAVE"],
-        )
-        file_menu.add_command(
-            label="Reset",
-            command=self._reset_model,
-            accelerator=self.shortcut_manager.accelerators["RESET"],
-        )
-
-        menubar.add_cascade(label="Edit", menu=edit_menu)
-        edit_menu.add_command(
-            label="Undo",
-            command=self._undo,
-            accelerator=self.shortcut_manager.accelerators["UNDO"],
-        )
-        edit_menu.add_command(
-            label="Redo",
-            command=self._redo,
-            accelerator=self.shortcut_manager.accelerators["REDO"],
-        )
-        edit_menu.add_separator()
-        edit_menu.add_command(
-            label="Add Feature",
-            command=lambda: self.add_feature(self.currently_highlighted_feature)
-            if self.currently_highlighted_feature
-            else messagebox.showerror("Error", "No feature selected."),
-            accelerator=self.shortcut_manager.accelerators["ADD_FEATURE"],
-        )
-        edit_menu.add_command(
-            label="Add Constraint",
-            command=lambda: self.add_constraint(self.currently_highlighted_feature)
-            if self.currently_highlighted_feature
-            else messagebox.showerror("Error", "No feature selected."),
-            accelerator=self.shortcut_manager.accelerators["ADD_CONSTRAINT"],
-        )
-        edit_menu.add_command(
-            label="Edit Feature",
-            command=lambda: self.edit_feature(self.currently_highlighted_feature)
-            if self.currently_highlighted_feature
-            else messagebox.showerror("Error", "No feature selected."),
-            accelerator=self.shortcut_manager.accelerators["EDIT_FEATURE"],
-        )
-        edit_menu.add_command(
-            label="Delete Feature",
-            command=lambda: self.delete_feature(self.currently_highlighted_feature)
-            if self.currently_highlighted_feature
-            else messagebox.showerror("Error", "No feature selected."),
-            accelerator=self.shortcut_manager.accelerators["DELETE_FEATURE"],
-        )
+        self.menubar = CFMMenuBar(self.root, self)
+        self.root.config(menu=self.menubar.get_menubar())
 
         # Buttons
         button_frame = ttk.Frame(main_frame)
