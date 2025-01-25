@@ -10,7 +10,7 @@ from cfmtoolbox import Cardinality, Interval, Feature, CFM, Constraint
 
 from cfmtoolbox_editor.utils.cfm_calc_graph_Layout import GraphLayoutCalculator, Point
 from cfmtoolbox_editor.ui.cfm_tooltip import ToolTip
-from cfmtoolbox_editor.utils.utils import (
+from cfmtoolbox_editor.utils.cfm_utils import (
     cardinality_to_display_str,
     edit_str_to_cardinality,
     cardinality_to_edit_str,
