@@ -29,7 +29,6 @@ from cfmtoolbox_editor.ui.cfm_constraints import CFMConstraints
 class CFMEditorApp:
     def __init__(self):
         self.cfm = None
-        self.original_cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
 
@@ -60,7 +59,7 @@ class CFMEditorApp:
     def start(self, cfm: CFM) -> CFM:
         self.cfm = cfm
         # Make a deep copy of the CFM to be able to undo changes
-        self.original_cfm = deepcopy(cfm)
+        self.undo_redo_manager.set_initial_state(self.cfm)
         self._initialize_feature_states(self.cfm.root)
         self._update_model_state()
         self.root.mainloop()
@@ -129,25 +128,25 @@ class CFMEditorApp:
             self.root.quit()
 
     def _reset_model(self):
-        self.cfm = deepcopy(self.original_cfm)
-        self._initialize_feature_states(self.cfm.root)
-        self._update_model_state()
+        original_state = self.undo_redo_manager.reset()
+        if original_state:
+            self._load_state(original_state)
 
     def _undo(self):
         previous_state = self.undo_redo_manager.undo()
         if previous_state:
-            self.cfm = previous_state
-            self._initialize_feature_states(self.cfm.root)
-            self._draw_model()
-            self.update_constraints()
+            self._load_state(previous_state)
 
     def _redo(self):
         next_state = self.undo_redo_manager.redo()
         if next_state:
-            self.cfm = next_state
-            self._initialize_feature_states(self.cfm.root)
-            self._draw_model()
-            self.update_constraints()
+            self._load_state(next_state)
+
+    def _load_state(self, state: CFM):
+        self.cfm = state
+        self._initialize_feature_states(self.cfm.root)
+        self._draw_model()
+        self.update_constraints()
 
     def _update_model_state(self):
         # Call after every change
