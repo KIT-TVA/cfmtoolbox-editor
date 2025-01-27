@@ -31,5 +31,6 @@ class UndoRedoManager:
         self.initial_state = deepcopy(cfm)
 
     def reset(self) -> CFM:
+        assert self.initial_state is not None
         self.add_state(self.initial_state)
         return deepcopy(self.initial_state)
