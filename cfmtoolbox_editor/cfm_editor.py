@@ -23,7 +23,6 @@ from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
 from cfmtoolbox_editor.utils.cfm_click_handler import CFMClickHandler
 
 from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
-from cfmtoolbox_editor.ui.cfm_buttons import CFMButtons
 from cfmtoolbox_editor.ui.cfm_constraints import CFMConstraints
 
 
@@ -81,9 +80,6 @@ class CFMEditorApp:
         # Create Menu Bar
         self.menubar = CFMMenuBar(self.root, self)
         self.root.config(menu=self.menubar.get_menubar())
-
-        # Buttons
-        self.buttons = CFMButtons(main_frame, self)
 
         # Constraints
         self.constraints = CFMConstraints(main_frame, self)
@@ -154,7 +150,7 @@ class CFMEditorApp:
             self.update_constraints()
 
     def _update_model_state(self):
-        # Nach jeder Änderung aufrufen
+        # Call after every change
         self.undo_redo_manager.add_state(self.cfm)
         self._draw_model()
         self.update_constraints()
