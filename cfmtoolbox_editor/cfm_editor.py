@@ -7,6 +7,7 @@ from typing import Dict
 
 from cfmtoolbox import Cardinality, Interval, Feature, CFM
 
+from cfmtoolbox_editor.ui.delete_feature_dialog import DeleteFeatureDialog
 from cfmtoolbox_editor.utils.cfm_calc_graph_Layout import GraphLayoutCalculator, Point
 from cfmtoolbox_editor.utils.cfm_utils import (
     cardinality_to_display_str,
@@ -452,93 +453,13 @@ class CFMEditorApp:
 
     # This is only used for inner nodes, so it is safe to assume that the feature has children and a parent.
     def show_delete_dialog(self, feature: Feature):
-        def submit(delete_subtree: bool):
-            parent = feature.parent
-            if not parent:
-                messagebox.showerror("Error", "Cannot delete root feature.")
-                dialog.destroy()
-                return
-            former_number_of_children = len(parent.children)
-            if delete_subtree:
-                # Remove all constraints that contain one of the children of the feature
-                self.cfm.constraints = [
-                    c
-                    for c in self.cfm.constraints
-                    if c.first_feature not in feature.children
-                    and c.second_feature not in feature.children
-                ]
-            else:
-                # Move its children to the parent at the index of the feature
-                index = parent.children.index(feature)
-                for child in reversed(feature.children):
-                    parent.children.insert(index, child)
-                    child.parent = parent
-            parent.children.remove(feature)
-            self.cfm.constraints = [
-                c
-                for c in self.cfm.constraints
-                if c.first_feature != feature and c.second_feature != feature
-            ]
-            group_created = False
-            if len(parent.children) == 0:
-                parent.group_type_cardinality, parent.group_instance_cardinality = (
-                    Cardinality([]),
-                    Cardinality([]),
-                )
-            if len(parent.children) == 1:
-                parent.group_type_cardinality, parent.group_instance_cardinality = (
-                    derive_parent_group_cards_for_one_child(
-                        parent.children[0].instance_cardinality
-                    )
-                )
-            # A new group was created
-            if len(parent.children) == 2 and former_number_of_children < 2:
-                parent.group_type_cardinality, parent.group_instance_cardinality = (
-                    derive_parent_group_cards_for_multiple_children(
-                        [child.instance_cardinality for child in parent.children]
-                    )
-                )
-                group_created = True
-
-            self._update_model_state()
-            dialog.destroy()
-            if group_created:
-                messagebox.showinfo(
-                    "Group Created",
-                    "A new group was created. You can edit its cardinalities now.",
-                )
-                self.show_feature_dialog(feature=parent)
-
-        dialog = tk.Toplevel()
-        dialog.title("Delete Method")
-        dialog.geometry("300x150")
-        dialog.transient(self.root)
-        dialog.grab_set()
-
-        label = tk.Label(
-            dialog,
-            text=(
-                f"Choose the delete method for feature {feature.name}. Delete subtree will also delete all descendents, transfer will attach them to their grand-parent."
-            ),
-            wraplength=280,
-            justify="left",
+        DeleteFeatureDialog(
+            parent_widget=self.root,  # Pass the parent widget (e.g., the root window)
+            feature=feature,  # The feature to be deleted
+            cfm=self.cfm,  # The CFM model containing constraints and features
+            update_model_state_callback=self._update_model_state,  # Callback to update the model state
+            show_feature_dialog_callback=self.show_feature_dialog  # Callback to open the feature dialog
         )
-        label.pack(pady=10)
-
-        button_frame = tk.Frame(dialog)
-        button_frame.pack(pady=10)
-
-        tk.Button(
-            button_frame, text="Delete subtree", command=lambda: submit(True)
-        ).pack(side="left", padx=5)
-        tk.Button(button_frame, text="Transfer", command=lambda: submit(False)).pack(
-            side="left", padx=5
-        )
-        tk.Button(button_frame, text="Cancel", command=dialog.destroy).pack(
-            side="left", padx=5
-        )
-
-        dialog.wait_window(dialog)
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(
