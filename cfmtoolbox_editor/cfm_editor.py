@@ -48,7 +48,6 @@ class CFMEditorApp:
 
     def start(self, cfm: CFM) -> CFM:
         self.cfm = cfm
-        # Make a deep copy of the CFM to be able to undo changes
         self.undo_redo_manager.set_initial_state(self.cfm)
         self._initialize_feature_states(self.cfm.root)
         self._update_model_state()
@@ -56,9 +55,8 @@ class CFMEditorApp:
         return self.cfm
 
     def _initialize_feature_states(self, feature):
-        self.expanded_features[id(feature)] = (
-            True  # Initialize all features as expanded
-        )
+        # Initialize all features as expanded
+        self.expanded_features[id(feature)] = True
         for child in feature.children:
             self._initialize_feature_states(child)
 
@@ -317,15 +315,6 @@ class CFMEditorApp:
 
     def update_constraints(self):
         self.constraints.update_constraints(self.cfm.constraints)
-
-    def on_constraints_click(self, event):
-        self.constraints.on_constraints_click(event)
-
-    def on_constraints_hover(self, event):
-        self.constraints.on_constraints_hover(event)
-
-    def on_constraints_leave(self, event):
-        self.constraints.on_constraints_leave(event)
 
     def add_constraint(self, feature):
         feature_node = self.canvas.find_withtag(f"feature_rect:{feature.name}")
