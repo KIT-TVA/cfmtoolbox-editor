@@ -159,69 +159,15 @@ class CFMEditorApp:
             )
         )
 
-    # TODO: Refactor this method as it became too long
     def draw_feature(self, feature: Feature, feature_instance_card_pos: str):
         x, y = self.positions[id(feature)].x, self.positions[id(feature)].y
-        node_id = self.canvas.create_text(
-            x, y, text=feature.name, tags=(f"feature_text:{feature.name}", feature.name)
-        )
-        bbox = self.canvas.bbox(node_id)
-        padding_x = 4
-        padding_y = 2
-        padded_bbox = (
-            bbox[0] - padding_x,
-            bbox[1] - padding_y,
-            bbox[2] + padding_x,
-            bbox[3] + padding_y,
-        )
-        rect_id = self.canvas.create_rectangle(
-            padded_bbox,
-            fill="lightgrey",
-            tags=(f"feature_rect:{feature.name}", feature.name),
-        )
-        self.canvas.tag_raise(node_id, rect_id)
+        node_id, padded_bbox = self._draw_node(feature, x, y)
 
         if not feature == self.cfm.root:
-            # bbox[1] is the y-coordinate of the top side of the box
-            anchor: str
-            match feature_instance_card_pos:
-                case "right":
-                    anchor = tk.W
-                    feature_instance_x = x + 4
-                case "left":
-                    anchor = tk.E
-                    feature_instance_x = x - 4
-                case _:
-                    anchor = tk.CENTER
-                    feature_instance_x = x
+            self._draw_feat_instance_card(feature, feature_instance_card_pos, padded_bbox, x)
 
-            feature_instance_y = padded_bbox[1] - 10
-            # TODO: The brackets don't look nice
-            self.canvas.create_text(
-                feature_instance_x,
-                feature_instance_y,
-                text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
-                tags=f"{feature.name}_feature_instance",
-                anchor=anchor,
-            )
-
-        # Add collapse/expand button
         if feature.children:
-            expanded = self.expanded_features.get(id(feature), True)
-            # TODO: Maybe add colors
-            button_text = "-" if expanded else "+"
-            button_id = self.canvas.create_text(
-                padded_bbox[2] + 10,
-                y,
-                text=button_text,
-                tags="button",
-                font=Font(weight="bold"),
-            )
-            self.canvas.tag_bind(
-                button_id,
-                self.click_handler.left_click(),
-                lambda event, f=feature: self.toggle_children(event, f),
-            )
+            self._draw_collapse_expand_button(feature, padded_bbox, y)
 
         self.canvas.tag_bind(
             node_id,
@@ -261,20 +207,7 @@ class CFMEditorApp:
                         degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
                     ) % 360
 
-                    # Calculate text position for group instance cardinality with linear interpolation
-                    slope = (new_x - x) / (new_y - 10 - (y + 10))
-                    group_instance_y = padded_bbox[3] + 10
-                    group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
-                    # anchor w means west, so the left side of the text is placed at the specified position
-                    self.canvas.create_text(
-                        group_instance_x,
-                        group_instance_y,
-                        text=cardinality_to_display_str(
-                            feature.group_instance_cardinality, "<", ">"
-                        ),
-                        tags=f"{feature.name}_group_instance",
-                        anchor=tk.W,
-                    )
+                    self._draw_group_instance_card(feature, new_x, new_y, padded_bbox, x, y)
 
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
                 self.draw_feature(child, child_feature_instance_card_pos)
@@ -291,16 +224,96 @@ class CFMEditorApp:
                     start=left_angle,
                     extent=right_angle - left_angle,
                 )
-                # bbox[3] is the y-coordinate of the bottom of the text box
-                group_type_y = padded_bbox[3] + 10
-                self.canvas.create_text(
-                    x,
-                    group_type_y,
-                    text=cardinality_to_display_str(
-                        feature.group_type_cardinality, "[", "]"
-                    ),
-                    tags=f"{feature.name}_group_type",
-                )
+                self._draw_group_type_card(feature, padded_bbox, x)
+
+    def _draw_node(self, feature, x, y):
+        node_id = self.canvas.create_text(
+            x, y, text=feature.name, tags=(f"feature_text:{feature.name}", feature.name)
+        )
+        bbox = self.canvas.bbox(node_id)
+        padding_x = 4
+        padding_y = 2
+        padded_bbox = (
+            bbox[0] - padding_x,
+            bbox[1] - padding_y,
+            bbox[2] + padding_x,
+            bbox[3] + padding_y,
+        )
+        rect_id = self.canvas.create_rectangle(
+            padded_bbox,
+            fill="lightgrey",
+            tags=(f"feature_rect:{feature.name}", feature.name),
+        )
+        self.canvas.tag_raise(node_id, rect_id)
+        return node_id, padded_bbox
+
+    def _draw_feat_instance_card(self, feature, feature_instance_card_pos, padded_bbox, x):
+        # bbox[1] is the y-coordinate of the top side of the box
+        anchor: str
+        match feature_instance_card_pos:
+            case "right":
+                anchor = tk.W
+                feature_instance_x = x + 4
+            case "left":
+                anchor = tk.E
+                feature_instance_x = x - 4
+            case _:
+                anchor = tk.CENTER
+                feature_instance_x = x
+        feature_instance_y = padded_bbox[1] - 10
+        # TODO: The brackets don't look nice
+        self.canvas.create_text(
+            feature_instance_x,
+            feature_instance_y,
+            text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            tags=f"{feature.name}_feature_instance",
+            anchor=anchor,
+        )
+
+    def _draw_collapse_expand_button(self, feature, padded_bbox, y):
+        expanded = self.expanded_features.get(id(feature), True)
+        # TODO: Maybe add colors
+        button_text = "-" if expanded else "+"
+        button_id = self.canvas.create_text(
+            padded_bbox[2] + 10,
+            y,
+            text=button_text,
+            tags="button",
+            font=Font(weight="bold"),
+        )
+        self.canvas.tag_bind(
+            button_id,
+            self.click_handler.left_click(),
+            lambda event, f=feature: self.toggle_children(event, f),
+        )
+
+    def _draw_group_instance_card(self, feature, new_x, new_y, padded_bbox, x, y):
+        # Calculate text position for group instance cardinality with linear interpolation
+        slope = (new_x - x) / (new_y - 10 - (y + 10))
+        group_instance_y = padded_bbox[3] + 10
+        group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
+        # anchor w means west, so the left side of the text is placed at the specified position
+        self.canvas.create_text(
+            group_instance_x,
+            group_instance_y,
+            text=cardinality_to_display_str(
+                feature.group_instance_cardinality, "<", ">"
+            ),
+            tags=f"{feature.name}_group_instance",
+            anchor=tk.W,
+        )
+
+    def _draw_group_type_card(self, feature, padded_bbox, x):
+        # bbox[3] is the y-coordinate of the bottom of the text box
+        group_type_y = padded_bbox[3] + 10
+        self.canvas.create_text(
+            x,
+            group_type_y,
+            text=cardinality_to_display_str(
+                feature.group_type_cardinality, "[", "]"
+            ),
+            tags=f"{feature.name}_group_type",
+        )
 
     def update_constraints(self):
         self.constraints.update_constraints(self.cfm.constraints)
