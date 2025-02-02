@@ -269,14 +269,14 @@ class CFMEditorApp:
 
     def _draw_collapse_expand_button(self, feature, padded_bbox, y):
         expanded = self.expanded_features.get(id(feature), True)
-        # TODO: Maybe add colors
-        button_text = "-" if expanded else "+"
+        button_text, button_color = ("-", "firebrick") if expanded else ("+", "green")
         button_id = self.canvas.create_text(
             padded_bbox[2] + 10,
             y,
             text=button_text,
             tags="button",
             font=Font(weight="bold"),
+            fill=button_color,
         )
         self.canvas.tag_bind(
             button_id,
