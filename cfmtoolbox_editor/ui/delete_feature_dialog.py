@@ -3,12 +3,21 @@ from tkinter import messagebox
 
 from cfmtoolbox import Cardinality, Feature
 
-from cfmtoolbox_editor.utils.cfm_utils import derive_parent_group_cards_for_one_child, \
-    derive_parent_group_cards_for_multiple_children
+from cfmtoolbox_editor.utils.cfm_utils import (
+    derive_parent_group_cards_for_one_child,
+    derive_parent_group_cards_for_multiple_children,
+)
 
 
 class DeleteFeatureDialog:
-    def __init__(self, parent_widget, feature: Feature, cfm, update_model_state_callback, show_feature_dialog_callback):
+    def __init__(
+            self,
+            parent_widget,
+            feature: Feature,
+            cfm,
+            update_model_state_callback,
+            show_feature_dialog_callback,
+    ):
         """
         Dialog for deleting a feature. Allows the user to either delete the subtree or transfer children to the parent.
 
@@ -54,9 +63,9 @@ class DeleteFeatureDialog:
         tk.Button(
             button_frame, text="Delete subtree", command=lambda: self.submit(True)
         ).pack(side="left", padx=5)
-        tk.Button(button_frame, text="Transfer", command=lambda: self.submit(False)).pack(
-            side="left", padx=5
-        )
+        tk.Button(
+            button_frame, text="Transfer", command=lambda: self.submit(False)
+        ).pack(side="left", padx=5)
         tk.Button(button_frame, text="Cancel", command=self.dialog.destroy).pack(
             side="left", padx=5
         )
@@ -68,7 +77,8 @@ class DeleteFeatureDialog:
         parent = self.feature.parent
         if not parent:
             messagebox.showerror("Error", "Cannot delete root feature.")
-            self.dialog.destroy()
+            if self.dialog:
+                self.dialog.destroy()
             return
 
         former_number_of_children = len(parent.children)
@@ -118,7 +128,8 @@ class DeleteFeatureDialog:
             group_created = True
 
         self.update_model_state()
-        self.dialog.destroy()
+        if self.dialog:
+            self.dialog.destroy()
 
         if group_created:
             messagebox.showinfo(

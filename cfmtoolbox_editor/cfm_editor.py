@@ -158,7 +158,9 @@ class CFMEditorApp:
         node_id, padded_bbox = self._draw_node(feature, x, y)
 
         if not feature == self.cfm.root:
-            self._draw_feat_instance_card(feature, feature_instance_card_pos, padded_bbox, x)
+            self._draw_feat_instance_card(
+                feature, feature_instance_card_pos, padded_bbox, x
+            )
 
         if feature.children:
             self._draw_collapse_expand_button(feature, padded_bbox, y)
@@ -201,7 +203,9 @@ class CFMEditorApp:
                         degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
                     ) % 360
 
-                    self._draw_group_instance_card(feature, new_x, new_y, padded_bbox, x, y)
+                    self._draw_group_instance_card(
+                        feature, new_x, new_y, padded_bbox, x, y
+                    )
 
                 child_feature_instance_card_pos = "right" if new_x >= x else "left"
                 self.draw_feature(child, child_feature_instance_card_pos)
@@ -241,7 +245,9 @@ class CFMEditorApp:
         self.canvas.tag_raise(node_id, rect_id)
         return node_id, padded_bbox
 
-    def _draw_feat_instance_card(self, feature, feature_instance_card_pos, padded_bbox, x):
+    def _draw_feat_instance_card(
+            self, feature, feature_instance_card_pos, padded_bbox, x
+    ):
         # bbox[1] is the y-coordinate of the top side of the box
         anchor: str
         match feature_instance_card_pos:
@@ -303,9 +309,7 @@ class CFMEditorApp:
         self.canvas.create_text(
             x,
             group_type_y,
-            text=cardinality_to_display_str(
-                feature.group_type_cardinality, "[", "]"
-            ),
+            text=cardinality_to_display_str(feature.group_type_cardinality, "[", "]"),
             tags=f"{feature.name}_group_type",
         )
 
@@ -453,7 +457,7 @@ class CFMEditorApp:
             feature=feature,  # The feature to be deleted
             cfm=self.cfm,  # The CFM model containing constraints and features
             update_model_state_callback=self._update_model_state,  # Callback to update the model state
-            show_feature_dialog_callback=self.show_feature_dialog  # Callback to open the feature dialog
+            show_feature_dialog_callback=self.show_feature_dialog,  # Callback to open the feature dialog
         )
 
     # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
