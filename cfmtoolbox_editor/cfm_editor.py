@@ -40,6 +40,8 @@ class CFMEditorApp:
 
         self.click_handler = CFMClickHandler()
 
+        self.CARDINALITY_FONT = ("Arial", 8)
+
         self._setup_ui()
 
     def start(self, cfm: CFM) -> CFM:
@@ -178,7 +180,7 @@ class CFMEditorApp:
         # Recursively draw children if expanded
         if feature.children and self.expanded_features.get(id(feature), True):
             # arc for group
-            arc_radius = 25
+            arc_radius = 35
             x_center = x
             y_center = y + 10
             left_angle = 180.0
@@ -260,6 +262,7 @@ class CFMEditorApp:
             feature_instance_x,
             feature_instance_y,
             text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_feature_instance",
             anchor=anchor,
         )
@@ -285,7 +288,7 @@ class CFMEditorApp:
         # Calculate text position for group instance cardinality with linear interpolation
         slope = (new_x - x) / (new_y - 10 - (y + 10))
         group_instance_y = padded_bbox[3] + 10
-        group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
+        group_instance_x = x + slope * (group_instance_y - (y + 10)) + 7
         # anchor w means west, so the left side of the text is placed at the specified position
         self.canvas.create_text(
             group_instance_x,
@@ -293,19 +296,21 @@ class CFMEditorApp:
             text=cardinality_to_display_str(
                 feature.group_instance_cardinality, "<", ">"
             ),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_instance",
             anchor=tk.W,
         )
 
     def _draw_group_type_card(self, feature, padded_bbox, x):
         # bbox[3] is the y-coordinate of the bottom of the text box
-        group_type_y = padded_bbox[3] + 10
+        group_type_y = padded_bbox[3] + 20
         self.canvas.create_text(
             x,
             group_type_y,
             text=cardinality_to_display_str(
                 feature.group_type_cardinality, "[", "]"
             ),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_type",
         )
 
