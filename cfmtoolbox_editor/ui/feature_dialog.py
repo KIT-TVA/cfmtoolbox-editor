@@ -4,7 +4,7 @@ from tkinter import Toplevel, Label, Entry, StringVar, Button
 from cfmtoolbox import Cardinality, Feature, Interval
 
 from cfmtoolbox_editor.utils.cfm_utils import derive_parent_group_cards_for_multiple_children, \
-    derive_parent_group_cards_for_one_child, edit_str_to_cardinality, cardinality_to_edit_str
+    derive_parent_group_cards_for_one_child, edit_str_to_cardinality, cardinality_to_edit_str, center_window
 
 
 class FeatureDialog:
@@ -47,7 +47,9 @@ class FeatureDialog:
         self.dialog.grab_set()
 
         self._create_widgets()
-        self._center_window()
+        self.dialog.update_idletasks()
+        x, y = center_window(self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height())
+        self.dialog.geometry(f"+{x}+{y}")
         self.dialog.wait_window(self.dialog)
 
     def _create_widgets(self):
@@ -97,22 +99,6 @@ class FeatureDialog:
             text="Save changes" if self.is_edit else "Add",
             command=self._on_submit
         ).grid(row=4, column=0, columnspan=2, pady=10)
-
-    def _center_window(self):
-        self.parent_widget.update_idletasks()
-        main_window_x = self.parent_widget.winfo_x()
-        main_window_y = (self.parent_widget.winfo_y())
-        main_window_width = self.parent_widget.winfo_width()
-        main_window_height = self.parent_widget.winfo_height()
-
-        dialog_x = (
-                main_window_x + (main_window_width // 2) - (self.dialog.winfo_reqwidth() // 2)
-        )
-        dialog_y = (
-                main_window_y + (main_window_height // 2) - (self.dialog.winfo_reqheight() // 2)
-        )
-
-        self.dialog.geometry(f"+{dialog_x}+{dialog_y}")
 
     def _on_submit(self):
         feature_name = self.name_var.get().strip()

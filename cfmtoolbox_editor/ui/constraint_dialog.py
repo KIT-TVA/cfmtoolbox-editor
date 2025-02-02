@@ -5,20 +5,20 @@ from cfmtoolbox import Constraint
 
 from cfmtoolbox_editor.utils.cfm_utils import (
     edit_str_to_cardinality,
-    cardinality_to_edit_str,
+    cardinality_to_edit_str, center_window,
 )
 
 
 class ConstraintDialog:
     def __init__(
             self,
-            parent,
+            parent_widget,
             editor,
             constraint=None,
             initial_first_feature=None,
             initial_second_feature=None,
     ):
-        self.parent = parent
+        self.parent_widget = parent_widget
         self.editor = editor
         self.constraint = constraint
         self.initial_first_feature = initial_first_feature
@@ -40,13 +40,16 @@ class ConstraintDialog:
         self.setup_dialog()
 
     def setup_dialog(self):
-        self.dialog = tk.Toplevel(self.parent)
+        self.dialog = tk.Toplevel(self.parent_widget)
         self.dialog.title("Edit Constraint" if self.constraint else "Add Constraint")
         self.dialog.geometry("750x100")
-        self.dialog.transient(self.parent)
+        self.dialog.transient(self.parent_widget)
         self.dialog.grab_set()
 
         self.create_widgets()
+        self.dialog.update_idletasks()
+        x, y = center_window(self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height())
+        self.dialog.geometry(f"+{x}+{y}")
         self.populate_initial_values()
 
     def create_widgets(self):

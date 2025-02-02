@@ -4,7 +4,7 @@ from tkinter import messagebox
 from cfmtoolbox import Cardinality, Feature
 
 from cfmtoolbox_editor.utils.cfm_utils import derive_parent_group_cards_for_one_child, \
-    derive_parent_group_cards_for_multiple_children
+    derive_parent_group_cards_for_multiple_children, center_window
 
 
 class DeleteFeatureDialog:
@@ -61,6 +61,9 @@ class DeleteFeatureDialog:
             side="left", padx=5
         )
 
+        self.dialog.update_idletasks()
+        x, y = center_window(self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height())
+        self.dialog.geometry(f"+{x}+{y}")
         self.dialog.wait_window(self.dialog)
 
     def submit(self, delete_subtree: bool):

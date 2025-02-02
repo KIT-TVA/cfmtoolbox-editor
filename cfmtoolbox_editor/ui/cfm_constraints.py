@@ -182,7 +182,7 @@ class CFMConstraints:
         if provided.
         """
         dialog = ConstraintDialog(
-            parent=self.editor.root,
+            parent_widget=self.editor.root,
             editor=self.editor,
             constraint=constraint,
             initial_first_feature=initial_first_feature,
