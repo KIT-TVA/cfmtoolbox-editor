@@ -4,7 +4,7 @@ To edit a feature in your feature model using the CFM Toolbox Editor, follow the
 
 Locate the feature in the editor that you want to edit.
 **Right-click** on the feature to open the context menu.
-![Context Menu](/images/context_menu.png)
+![Context Menu](../images/context_menu.png)
 
 **2. Select "Edit Feature" from the Menu**
 
@@ -22,7 +22,7 @@ In the edit dialog, you can change the following:
     - Cardinality: Adjust the cardinality values (e.g., 1..1, 0..*, etc.) as needed.
 Click "Save Changes" to confirm your changes.
 
-![Context Menu](/images/edit_feature.png)
+![Context Menu](../images/edit_feature.png)
 
 # Notes
 

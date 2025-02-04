@@ -3,7 +3,7 @@ To delete a constraint from your feature model in the CFM Toolbox Editor, follow
 **Select the Constraint in the Constraints Panel**
 
 In the Constraints Panel in the editor, locate and select the constraint you want to edit.
-![Context Menu](/images/context_menu.png)
+![Context Menu](../images/context_menu.png)
 
 **2. Click the Edit Icon**
 
@@ -19,7 +19,7 @@ In the edit dialog, you can make the following changes:
 5. Cardinality for Second Feature: Adjust the cardinality for the second feature.
 Click "Save" to confirm your changes.
 
-![Context Menu](/images/edit_constraint.png)
+![Context Menu](../images/edit_constraint.png)
 
 # Notes
 

@@ -4,7 +4,7 @@ To add a new feature to your feature model in the CFM Toolbox Editor, follow the
 
 Locate the feature in the editor where you want to add a child feature.
 **Right-click** on the feature to open the context menu.
-![Context Menu](/images/context_menu.png)
+![Context Menu](../images/context_menu.png)
 
 **2. Select "add child" from the Menu**
 
@@ -17,7 +17,7 @@ In the dialog, provide the following details:
     - Cardinalities: Specify the cardinality values for the feature (e.g., 1..1, 0..*, etc.).
 Click the "Add" button to confirm and create the feature.
 
-![Add Feature](/images/add_feature.png)
+![Add Feature](../images/add_feature.png)
 
 The new feature will now appear as a child of the selected feature in the editor.
 You can continue editing or adding more features as needed.

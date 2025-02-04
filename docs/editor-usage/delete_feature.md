@@ -5,7 +5,7 @@ To delete a feature from your feature model in the CFM Toolbox Editor, follow th
 Locate the feature in the editor that you want to delete.
 **Right-click** on the feature to open the context menu.
 
-![Context Menu](/images/context_menu.png)
+![Context Menu](../images/context_menu.png)
 
 **2. Select "Delete Feature" from the Menu**
 
@@ -16,7 +16,7 @@ From the context menu, select the option "Delete Feature". This will open a conf
 In the confirmation dialog, review the details of the feature you are about to delete.
 Click "OK" or "Cancel" to proceed with the deletion.
 
-![Context Menu](/images/confirm_deletion.png)
+![Context Menu](../images/confirm_deletion.png)
 
 # Notes
 
