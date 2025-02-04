@@ -3,12 +3,21 @@ from tkinter import messagebox
 
 from cfmtoolbox import Cardinality, Feature
 
-from cfmtoolbox_editor.utils.cfm_utils import derive_parent_group_cards_for_one_child, \
-    derive_parent_group_cards_for_multiple_children
+from cfmtoolbox_editor.utils.cfm_utils import (
+    derive_parent_group_cards_for_one_child,
+    derive_parent_group_cards_for_multiple_children,
+)
 
 
 class DeleteFeatureDialog:
-    def __init__(self, parent_widget, feature: Feature, cfm, update_model_state_callback, show_feature_dialog_callback):
+    def __init__(
+        self,
+        parent_widget,
+        feature: Feature,
+        cfm,
+        update_model_state_callback,
+        show_feature_dialog_callback,
+    ):
         """
         Dialog for deleting a feature. Allows the user to either delete the subtree or transfer children to the parent.
 
@@ -54,9 +63,9 @@ class DeleteFeatureDialog:
         tk.Button(
             button_frame, text="Delete subtree", command=lambda: self.submit(True)
         ).pack(side="left", padx=5)
-        tk.Button(button_frame, text="Transfer", command=lambda: self.submit(False)).pack(
-            side="left", padx=5
-        )
+        tk.Button(
+            button_frame, text="Transfer", command=lambda: self.submit(False)
+        ).pack(side="left", padx=5)
         tk.Button(button_frame, text="Cancel", command=self.dialog.destroy).pack(
             side="left", padx=5
         )
@@ -79,7 +88,7 @@ class DeleteFeatureDialog:
                 c
                 for c in self.cfm.constraints
                 if c.first_feature not in self.feature.children
-                   and c.second_feature not in self.feature.children
+                and c.second_feature not in self.feature.children
             ]
         else:
             # Transfer children to the parent
