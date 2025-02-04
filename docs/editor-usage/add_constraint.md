@@ -4,7 +4,7 @@ To add a new feature to your feature model in the CFM Toolbox Editor, follow the
 
 Locate the feature in the editor where you want to add a constraint.
 **Right-click** on the feature to open the context menu.
-![Context Menu](/images/context_menu.png)
+![Context Menu](../images/context_menu.png)
 
 **2. Select "Add Constraint" from the Menu**
 
@@ -20,7 +20,7 @@ In the dialog, provide the following details:
 5. Cardinality for Second Feature: Specify the cardinality for the second feature.
 Click "Add" or "Apply" to confirm and create the     constraint.
 
-![Add Feature](/images/add_constraint.png)
+![Add Feature](../images/add_constraint.png)
 
 # Notes
 

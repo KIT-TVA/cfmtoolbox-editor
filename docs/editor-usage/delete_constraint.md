@@ -4,7 +4,7 @@ To delete a constraint from your feature model in the CFM Toolbox Editor, follow
 
 In the Constraints Panel in the editor, locate and select the constraint you want to delete.
 
-![Context Menu](/images/editor_ui.png)
+![Context Menu](../images/editor_ui.png)
 
 **2. Click the Delete Icon**
 
@@ -15,7 +15,7 @@ Once the constraint is selected, click the Delete Icon (usually represented by a
 A confirmation dialog will appear to ensure you want to delete the constraint.
 Click "OK" or "Cancel" to proceed with the deletion.
 
-![Context Menu](/images/confirm_deletion_constraint.png)
+![Context Menu](../images/confirm_deletion_constraint.png)
 
 # Notes
 
