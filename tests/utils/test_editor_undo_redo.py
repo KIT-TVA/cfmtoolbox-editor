@@ -1,6 +1,6 @@
 import pytest
 from cfmtoolbox import Feature, CFM, Cardinality, Interval, Constraint
-from cfmtoolbox_editor.cfm_editor_undo_redo import UndoRedoManager
+from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
 
 
 @pytest.fixture
