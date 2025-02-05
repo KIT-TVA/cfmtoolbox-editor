@@ -49,48 +49,44 @@ class CFMConstraints:
         self.constraints_scroll.grid(row=1, column=2, sticky="ns")
 
         # Treeview
-        self.constraints_tree = ttk.Treeview(
-            self.constraints_frame,
-            columns=(
-                "First Feature",
-                "First Cardinality",
-                "Type",
-                "Second Feature",
-                "Second Cardinality",
-                "Edit",
-                "Delete",
-            ),
-            show="tree",
-            height=4,
-        )
-        self._setup_tree_columns()
-        self.constraints_tree.bind(
-            self.click_handler.left_click(), self.on_constraints_click
-        )
-        self.constraints_tree.bind("<Motion>", self.on_constraints_hover)
-        self.constraints_tree.bind("<Leave>", self.on_constraints_leave)
+        self._setup_treeview()
 
-    def _setup_tree_columns(self):
-        columns_config = {
-            "First Feature": (tk.E, 120),
-            "First Cardinality": (tk.W, 100),
-            "Type": (tk.CENTER, 60),
-            "Second Feature": (tk.E, 120),
-            "Second Cardinality": (tk.W, 100),
-            "Edit": (tk.CENTER, 50),
-            "Delete": (tk.CENTER, 50),
-        }
-
-        for col, (anchor, width) in columns_config.items():
-            self.constraints_tree.column(col, anchor=anchor, width=width)
-
-        self.constraints_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5)
         self.constraints_tree.config(yscrollcommand=self.constraints_scroll.set)
         self.constraints_scroll.config(command=self.constraints_tree.yview)
 
         self.constraints_frame.columnconfigure(0, weight=1)
         self.constraints_frame.columnconfigure(1, weight=0)
         self.constraints_frame.rowconfigure(1, weight=1)
+        self.constraints_tree.bind(
+            self.click_handler.left_click(), self.on_constraints_click
+        )
+        self.constraints_tree.bind("<Motion>", self.on_constraints_hover)
+        self.constraints_tree.bind("<Leave>", self.on_constraints_leave)
+
+    def _setup_treeview(self):
+        columns_config = {
+            "First Feature": (tk.E, 140),
+            "First Cardinality": (tk.W, 90),
+            "Type": (tk.CENTER, 60),
+            "Second Feature": (tk.E, 140),
+            "Second Cardinality": (tk.W, 90),
+            "Edit": (tk.CENTER, 40),
+            "Delete": (tk.CENTER, 40),
+        }
+        self.constraints_tree = ttk.Treeview(
+            self.constraints_frame,
+            columns=list(columns_config.keys()),
+            show="tree",
+            height=4,
+        )
+
+        for col, (anchor, width) in columns_config.items():
+            self.constraints_tree.column(col, anchor=anchor, width=width)
+
+        # Hide the tree column (used for tree hierarchy and indentation, but not needed when used as a flat list)
+        self.constraints_tree.column("#0", width=0, stretch=tk.NO)
+
+        self.constraints_tree.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5)
 
     def _create_constraints_tooltip(self):
         return ToolTip(self.constraints_frame)
