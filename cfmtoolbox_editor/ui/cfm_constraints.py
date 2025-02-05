@@ -155,7 +155,7 @@ class CFMConstraints:
 
             value = self.constraints_tree.item(item, "values")
             if value and col_index < len(value):
-                self.tooltip.show_tip(value[col_index])
+                self.tooltip.show_tip(value[col_index], x_pos=100)
             else:
                 self.tooltip.hide_tip()
         else:
