@@ -3,8 +3,13 @@ from tkinter import Toplevel, Label, Entry, StringVar, Button
 
 from cfmtoolbox import Cardinality, Feature, Interval
 
-from cfmtoolbox_editor.utils.cfm_utils import derive_parent_group_cards_for_multiple_children, \
-    derive_parent_group_cards_for_one_child, edit_str_to_cardinality, cardinality_to_edit_str, center_window
+from cfmtoolbox_editor.utils.cfm_utils import (
+    derive_parent_group_cards_for_multiple_children,
+    derive_parent_group_cards_for_one_child,
+    edit_str_to_cardinality,
+    cardinality_to_edit_str,
+    center_window,
+)
 
 
 class FeatureDialog:
@@ -25,8 +30,16 @@ class FeatureDialog:
         feature: The feature being edited (if applicable).
     """
 
-    def __init__(self, parent_widget, cfm, expanded_features, update_model_state_callback, show_feature_dialog_callback,
-                 parent_feature=None, feature=None):
+    def __init__(
+            self,
+            parent_widget,
+            cfm,
+            expanded_features,
+            update_model_state_callback,
+            show_feature_dialog_callback,
+            parent_feature=None,
+            feature=None,
+    ):
         self.parent_widget = parent_widget  # The Tk root window or parent widget
         self.cfm = cfm
         self.expanded_features = expanded_features
@@ -64,7 +77,9 @@ class FeatureDialog:
             row=0, column=0, padx=5, pady=5, sticky="w"
         )
         self.name_var = StringVar(value=current_name)
-        Entry(self.dialog, textvariable=self.name_var).grid(row=0, column=1, padx=5, pady=5)
+        Entry(self.dialog, textvariable=self.name_var).grid(
+            row=0, column=1, padx=5, pady=5
+        )
 
         Label(self.dialog, text="Feature cardinality (e.g., '1,2; 5,*'):").grid(
             row=1, column=0, padx=5, pady=5, sticky="w"
@@ -75,8 +90,12 @@ class FeatureDialog:
         )
 
         if self.is_group and self.feature:
-            current_group_type_card = cardinality_to_edit_str(self.feature.group_type_cardinality)
-            current_group_instance_card = cardinality_to_edit_str(self.feature.group_instance_cardinality)
+            current_group_type_card = cardinality_to_edit_str(
+                self.feature.group_type_cardinality
+            )
+            current_group_instance_card = cardinality_to_edit_str(
+                self.feature.group_instance_cardinality
+            )
 
             Label(self.dialog, text="Group type cardinality:").grid(
                 row=2, column=0, padx=5, pady=5, sticky="w"
@@ -97,7 +116,7 @@ class FeatureDialog:
         Button(
             self.dialog,
             text="Save changes" if self.is_edit else "Add",
-            command=self._on_submit
+            command=self._on_submit,
         ).grid(row=4, column=0, columnspan=2, pady=10)
 
     def _on_submit(self):
@@ -141,7 +160,9 @@ class FeatureDialog:
                     )
                     return
                 try:
-                    group_instance_card = edit_str_to_cardinality(raw_group_instance_card)
+                    group_instance_card = edit_str_to_cardinality(
+                        raw_group_instance_card
+                    )
                 except ValueError:
                     messagebox.showerror(
                         "Input Error",
@@ -169,15 +190,20 @@ class FeatureDialog:
             self.expanded_features[id(new_feature)] = True
             self.parent_feature.children.append(new_feature)
             if len(self.parent_feature.children) == 1:
-                self.parent_feature.group_type_cardinality, self.parent_feature.group_instance_cardinality = (
-                    derive_parent_group_cards_for_one_child(feature_card)
-                )
+                (
+                    self.parent_feature.group_type_cardinality,
+                    self.parent_feature.group_instance_cardinality,
+                ) = derive_parent_group_cards_for_one_child(feature_card)
             if len(self.parent_feature.children) == 2:
                 group_created = True
-                self.parent_feature.group_type_cardinality, self.parent_feature.group_instance_cardinality = (
-                    derive_parent_group_cards_for_multiple_children(
-                        [child.instance_cardinality for child in self.parent_feature.children]
-                    )
+                (
+                    self.parent_feature.group_type_cardinality,
+                    self.parent_feature.group_instance_cardinality,
+                ) = derive_parent_group_cards_for_multiple_children(
+                    [
+                        child.instance_cardinality
+                        for child in self.parent_feature.children
+                    ]
                 )
 
         self.update_model_state_callback()

@@ -1,0 +1,82 @@
+site_name: CFM Toolbox Editor
+site_description: Documentation for the CFM Toolbox Editor, a graphical tool for working with cardinality-based feature models.
+site_url: https://kit-tva.github.io/cfmtoolbox-editor/
+repo_url: https://github.com/KIT-TVA/cfmtoolbox-editor/
+
+theme:
+  name: material
+  color_mode: auto
+  user_color_mode_toggle: true
+  features:
+    - navigation.sections
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://mkdocstrings.github.io/autorefs/objects.inv
+            - https://www.mkdocs.org/objects.inv
+            - https://python-markdown.github.io/objects.inv
+          paths: [ cfmtoolbox ]
+          options:
+            docstring_options:
+              ignore_init_summary: true
+            docstring_section_style: list
+            filters: [ "!^_" ]
+            heading_level: 1
+            inherited_members: true
+            merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            summary: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      use_pygments: true
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
+  - pymdownx.details
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Editor Usage:
+      - Add Constraint: editor-usage/add_constraint.md
+      - Add Feature: editor-usage/add_feature.md
+      - Delete Constraint: editor-usage/delete_constraint.md
+      - Delete Feature: editor-usage/delete_feature.md
+      - Edit Constraint: editor-usage/edit_constraint.md
+      - Edit Feature: editor-usage/edit_feature.md
+  - Framework:
+      - Contributing: framework/contributing.md

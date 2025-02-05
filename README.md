@@ -1,5 +1,21 @@
 # CFM Toolbox Editor
 
+[![Versions][versions-image]][versions-url]
+[![PyPI][pypi-image]][pypi-url]
+[![License][license-image]][license-url]
+
+[versions-image]: https://img.shields.io/pypi/pyversions/cfmtoolbox
+
+[versions-url]: https://github.com/KIT-TVA/cfmtoolbox-editor/blob/main/pyproject.toml
+
+[pypi-image]: https://img.shields.io/pypi/v/cfmtoolbox
+
+[pypi-url]: https://pypi.org/project/cfmtoolbox/
+
+[license-image]: https://img.shields.io/pypi/l/cfmtoolbox
+
+[license-url]: https://github.com/KIT-TVA/cfmtoolbox-editor/blob/main/LICENSE
+
 The Editor is a command plugin for the CFM Toolbox framework
 (see [CFM Toolbox Documentation](https://kit-tva.github.io/cfmtoolbox/)). It adds the `edit` command which enables the
 visual editing of a CFM Model.
