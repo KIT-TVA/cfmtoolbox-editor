@@ -51,7 +51,7 @@ class CFMEditorApp:
         self.cfm = cfm
         self.undo_redo_manager.set_initial_state(self.cfm)
         self._initialize_feature_states(self.cfm.root)
-        self._update_model_state()
+        self.update_model_state()
         self.root.mainloop()
         return self.cfm
 
@@ -129,7 +129,7 @@ class CFMEditorApp:
         self._draw_model()
         self.update_constraints()
 
-    def _update_model_state(self):
+    def update_model_state(self):
         # Call after every change
         self.undo_redo_manager.add_state(self.cfm)
         self._draw_model()
@@ -142,7 +142,6 @@ class CFMEditorApp:
         self.canvas.delete("all")
         self.draw_feature(self.cfm.root, "middle")
 
-        # TODO: Does not take into account the sizes of the outermost nodes. Could be solved by a maximum node size.
         min_x = min(pos.x for pos in self.positions.values())
         max_x = max(pos.x for pos in self.positions.values())
         max_y = max(pos.y for pos in self.positions.values())
@@ -433,13 +432,13 @@ class CFMEditorApp:
         ):
             return
         self.cfm.constraints.remove(constraint)
-        self.update_constraints()
+        self.update_model_state()
 
     def toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(
             id(feature), True
         )
-        self._update_model_state()
+        self.update_model_state()
 
     def on_right_click_node(self, event, feature):
         menu = Menu(self.root, tearoff=0)
@@ -491,7 +490,7 @@ class CFMEditorApp:
                     for c in self.cfm.constraints
                     if c.first_feature != feature and c.second_feature != feature
                 ]
-                self._update_model_state()
+                self.update_model_state()
 
         # inner node
         else:
@@ -503,7 +502,7 @@ class CFMEditorApp:
             parent_widget=self.root,  # Pass the parent widget (e.g., the root window)
             feature=feature,  # The feature to be deleted
             cfm=self.cfm,  # The CFM model containing constraints and features
-            update_model_state_callback=self._update_model_state,  # Callback to update the model state
+            update_model_state_callback=self.update_model_state,  # Callback to update the model state
             show_feature_dialog_callback=self.show_feature_dialog,  # Callback to open the feature dialog
         )
 
@@ -515,7 +514,7 @@ class CFMEditorApp:
             parent_widget=self.root,
             cfm=self.cfm,
             expanded_features=self.expanded_features,
-            update_model_state_callback=self._update_model_state,
+            update_model_state_callback=self.update_model_state,
             show_feature_dialog_callback=self.show_feature_dialog,
             parent_feature=parent,
             feature=feature,

@@ -187,4 +187,4 @@ class CFMConstraints:
         result = dialog.show()
         if result:
             self.editor.cfm.constraints.append(result)
-        self.update_constraints(self.editor.cfm.constraints)
+        self.editor.update_model_state()
