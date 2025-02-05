@@ -1,5 +1,4 @@
 import tkinter as tk
-from locale import windows_locale
 from typing import Tuple, List
 
 from cfmtoolbox import Cardinality, Interval
