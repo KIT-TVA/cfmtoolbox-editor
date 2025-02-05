@@ -18,12 +18,17 @@ class GraphLayoutCalculator:
     An adaption had to be made to account for the different lengths of feature names.
     """
 
-    def __init__(self, cfm: CFM, expanded_features: dict[int, bool]):
+    def __init__(
+        self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+    ):
         self.cfm = cfm
         """The feature model to calculate the layout for."""
 
         self.expanded_features = expanded_features
         """Only calculate positions for expanded features."""
+
+        self.max_node_width: int = max_node_width
+        """The maximum width of a node in the graph. If the text is longer, it will be cut off."""
 
         self.pos = {id(feature): Point(0, 0) for feature in cfm.features}
         """The final positions of the features in the feature model."""
@@ -61,8 +66,12 @@ class GraphLayoutCalculator:
         :return: The left and right contour of the subtree rooted at the feature.
         """
         left_contour, right_contour = (
-            [floor(-self.scale_text * len(feature.name))],
-            [ceil(self.scale_text * len(feature.name))],
+            [
+                floor(
+                    max(-self.scale_text * len(feature.name), -self.max_node_width // 2)
+                )
+            ],
+            [ceil(min(self.scale_text * len(feature.name), self.max_node_width // 2))],
         )
         children = feature.children
         if (
@@ -142,14 +151,18 @@ class GraphLayoutCalculator:
             left_contour.append(
                 self.shift[id(children[0])]
                 + children_contours[id(children[0])][0][0]
-                + ceil(self.scale_text * len(feature.name))
+                + ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             left_contour.extend(current_left_contour[1:])
 
             right_contour.append(
                 self.shift[id(children[-1])]
                 + children_contours[id(children[-1])][1][0]
-                - ceil(self.scale_text * len(feature.name))
+                - ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             right_contour.extend(current_right_contour[1:])
 

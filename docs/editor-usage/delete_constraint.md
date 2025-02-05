@@ -8,7 +8,8 @@ In the Constraints Panel in the editor, locate and select the constraint you wan
 
 **2. Click the Delete Icon**
 
-Once the constraint is selected, click the Delete Icon (usually represented by a trash bin or cross symbol) in the Constraints Panel.
+Once the constraint is selected, click the Delete Icon (usually represented by a trash bin or cross symbol) in the
+Constraints Panel.
 
 **3. Confirm Deletion**
 
@@ -19,11 +20,13 @@ Click "OK" or "Cancel" to proceed with the deletion.
 
 # Notes
 
-**Impact:** Deleting a constraint may affect the validity of your feature model. Ensure that the removal aligns with your model's requirements.
+**Impact:** Deleting a constraint may affect the validity of your feature model. Ensure that the removal aligns with
+your model's requirements.
 
 **Undo:** If you accidentally delete a constraint, you can use the Undo option (Ctrl+Z or Cmd+Z) to restore it.
 
 # Example
+
 Here’s an example of how the Constraints Panel might look before and after deleting a constraint:
 
 **Before**
@@ -35,6 +38,7 @@ Constraints:
 ```
 
 **After Deleting the First Constraint:**
+
 ``` Shell
 Constraints:
 1. Feature C (0..*) excludes Feature D (1..1)

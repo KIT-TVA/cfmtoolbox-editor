@@ -6,6 +6,7 @@ from cfmtoolbox import Cardinality, Feature
 from cfmtoolbox_editor.utils.cfm_utils import (
     derive_parent_group_cards_for_one_child,
     derive_parent_group_cards_for_multiple_children,
+    center_window,
 )
 
 
@@ -70,6 +71,11 @@ class DeleteFeatureDialog:
             side="left", padx=5
         )
 
+        self.dialog.update_idletasks()
+        x, y = center_window(
+            self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height()
+        )
+        self.dialog.geometry(f"+{x}+{y}")
         self.dialog.wait_window(self.dialog)
 
     def submit(self, delete_subtree: bool):
@@ -77,7 +83,8 @@ class DeleteFeatureDialog:
         parent = self.feature.parent
         if not parent:
             messagebox.showerror("Error", "Cannot delete root feature.")
-            self.dialog.destroy()
+            if self.dialog:
+                self.dialog.destroy()
             return
 
         former_number_of_children = len(parent.children)
@@ -127,7 +134,8 @@ class DeleteFeatureDialog:
             group_created = True
 
         self.update_model_state()
-        self.dialog.destroy()
+        if self.dialog:
+            self.dialog.destroy()
 
         if group_created:
             messagebox.showinfo(

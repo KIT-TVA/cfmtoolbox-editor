@@ -8,7 +8,8 @@ Note that we use [poetry](https://python-poetry.org/) for project and dependency
 
 ## Running the cfmtoolbox
 
-After installing the project and its dependencies, you can run the development version of the CFM Toolbox using the following command: 
+After installing the project and its dependencies, you can run the development version of the CFM Toolbox using the
+following command:
 
 ```bash
 poetry run cfmtoolbox
@@ -36,7 +37,8 @@ For static type checking, run the following command:
 poetry run mypy .
 ```
 
-To automatically check the formatting, linting, and static type checking on every commit, you can install the pre-commit hooks:
+To automatically check the formatting, linting, and static type checking on every commit, you can install the pre-commit
+hooks:
 
 ```bash
 poetry run pre-commit install
@@ -51,7 +53,8 @@ To run the tests, use the following command:
 poetry run pytest
 ```
 
-A test coverage report will automatically be generated, displayed in the terminal, and exported as an interactive HTML report in the `htmlcov` directory.
+A test coverage report will automatically be generated, displayed in the terminal, and exported as an interactive HTML
+report in the `htmlcov` directory.
 
 ## Previewing the documentation
 

@@ -13,22 +13,26 @@ From the context menu, select the option "Edit Feature". This will open the edit
 **3. Modify Feature Details**
 
 In the edit dialog, you can change the following:
+
 - Name: Update the name of the feature. Ensure the new name is unique and does not conflict with existing feature names.
 - Cardinality: Adjust the cardinality values (e.g., 1..1, 0..*, etc.) as needed.
 
 Click "Save Changes" to confirm your changes.
 In the edit dialog, you can change the following:
-    - Name: Update the name of the feature. Ensure the new name is unique and does not conflict with existing feature names.
-    - Cardinality: Adjust the cardinality values (e.g., 1..1, 0..*, etc.) as needed.
+- Name: Update the name of the feature. Ensure the new name is unique and does not conflict with existing feature names.
+- Cardinality: Adjust the cardinality values (e.g., 1..1, 0..*, etc.) as needed.
 Click "Save Changes" to confirm your changes.
 
 ![Context Menu](../images/edit_feature.png)
 
 # Notes
 
-**Unique Name:** The feature name must be unique within the model. If the name already exists, you will be prompted to choose a different name.
+**Unique Name:** The feature name must be unique within the model. If the name already exists, you will be prompted to
+choose a different name.
 
-**Constraints Update:** If the feature is involved in any constraints (e.g., cross-tree constraints), these constraints will be automatically updated to reflect the changes. Ensure the updated constraints still align with your model's requirements.
+**Constraints Update:** If the feature is involved in any constraints (e.g., cross-tree constraints), these constraints
+will be automatically updated to reflect the changes. Ensure the updated constraints still align with your model's
+requirements.
 
 **Undo:** If you make a mistake, you can use the Undo option (Ctrl+Z or Cmd+Z) to revert the changes.
 

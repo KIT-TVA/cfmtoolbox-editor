@@ -13,12 +13,13 @@ From the context menu, select the option "Add Constraint". This will open the co
 **3. Define the Constraint**
 
 In the dialog, provide the following details:
+
 1. First Feature: Select the first feature involved in the constraint.
 2. Cardinality for First Feature: Specify the cardinality for the first feature (e.g., 1..1, 0..*, etc.).
 3. Constraint Type: Choose the type of constraint (e.g., requires, excludes, etc.).
 4. Second Feature: Select the second feature involved in the constraint.
 5. Cardinality for Second Feature: Specify the cardinality for the second feature.
-Click "Add" or "Apply" to confirm and create the     constraint.
+   Click "Add" or "Apply" to confirm and create the constraint.
 
 ![Add Feature](../images/add_constraint.png)
 
@@ -31,13 +32,16 @@ Click "Add" or "Apply" to confirm and create the     constraint.
 
 **Cardinality:** Ensure the cardinality values align with your model's requirements.
 
-**Validation:** The editor will validate the constraint to ensure it does not conflict with existing constraints or feature relationships.
+**Validation:** The editor will validate the constraint to ensure it does not conflict with existing constraints or
+feature relationships.
 
 # Constraint Panel
 
-You can view and manage all constraints in the **Constraints Panel** of the editor. This panel provides an overview of all constraints and allows you to edit or delete them if needed.
+You can view and manage all constraints in the **Constraints Panel** of the editor. This panel provides an overview of
+all constraints and allows you to edit or delete them if needed.
 
 # Example
+
 Here’s an example of how a constraint might look in the feature model:
 
 ``` Shell

@@ -1,3 +1,4 @@
+import tkinter as tk
 from typing import Tuple, List
 
 from cfmtoolbox import Cardinality, Interval
@@ -115,3 +116,25 @@ def derive_parent_group_cards_for_multiple_children(
         Cardinality([Interval(lower_group_type, upper_group_type)]),
         Cardinality([Interval(lower_group_instance, upper_group_instance)]),
     )
+
+
+def center_window(
+    parent_widget: tk.Widget, window_width: int, window_height: int
+) -> Tuple[int, int]:
+    """
+    Calculates the position of the window to appear centered relative to the parent widget.
+    :param parent_widget: The widget in which to center the window
+    :param window_width: The width of the window in pixels
+    :param window_height: The height of the window in pixels
+    :return: The x and y coordinate of the top left corner of the window
+    """
+    parent_widget.update_idletasks()
+    main_window_x = parent_widget.winfo_x()
+    main_window_y = parent_widget.winfo_y()
+    main_window_width = parent_widget.winfo_width()
+    main_window_height = parent_widget.winfo_height()
+
+    window_x = main_window_x + (main_window_width // 2) - (window_width // 2)
+    window_y = main_window_y + (main_window_height // 2) - (window_height // 2)
+
+    return window_x, window_y
