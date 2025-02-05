@@ -290,7 +290,7 @@ class CFMEditorApp:
         return node_id, padded_bbox
 
     def _draw_feat_instance_card(
-            self, feature, feature_instance_card_pos, padded_bbox, x
+        self, feature, feature_instance_card_pos, padded_bbox, x
     ):
         # bbox[1] is the y-coordinate of the top side of the box
         anchor: str

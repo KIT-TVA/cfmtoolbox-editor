@@ -19,7 +19,7 @@ class GraphLayoutCalculator:
     """
 
     def __init__(
-            self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+        self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
     ):
         self.cfm = cfm
         """The feature model to calculate the layout for."""

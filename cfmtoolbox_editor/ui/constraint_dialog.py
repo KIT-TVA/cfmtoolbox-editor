@@ -12,12 +12,12 @@ from cfmtoolbox_editor.utils.cfm_utils import (
 
 class ConstraintDialog:
     def __init__(
-            self,
-            parent_widget,
-            editor,
-            constraint=None,
-            initial_first_feature=None,
-            initial_second_feature=None,
+        self,
+        parent_widget,
+        editor,
+        constraint=None,
+        initial_first_feature=None,
+        initial_second_feature=None,
     ):
         self.parent_widget = parent_widget
         self.editor = editor

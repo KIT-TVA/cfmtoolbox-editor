@@ -31,14 +31,14 @@ class FeatureDialog:
     """
 
     def __init__(
-            self,
-            parent_widget,
-            cfm,
-            expanded_features,
-            update_model_state_callback,
-            show_feature_dialog_callback,
-            parent_feature=None,
-            feature=None,
+        self,
+        parent_widget,
+        cfm,
+        expanded_features,
+        update_model_state_callback,
+        show_feature_dialog_callback,
+        parent_feature=None,
+        feature=None,
     ):
         self.parent_widget = parent_widget  # The Tk root window or parent widget
         self.cfm = cfm
@@ -51,7 +51,7 @@ class FeatureDialog:
         self.is_edit = feature is not None
         self.is_group = feature is not None and len(feature.children) > 1
         self.is_only_child = (
-                feature is not None and feature.parent and len(feature.parent.children) == 1
+            feature is not None and feature.parent and len(feature.parent.children) == 1
         )
 
         self.dialog = Toplevel(self.parent_widget)
@@ -128,7 +128,7 @@ class FeatureDialog:
             return
 
         if (feature_name in [f.name for f in self.cfm.features]) and (
-                not self.is_edit or (feature_name != self.feature.name)
+            not self.is_edit or (feature_name != self.feature.name)
         ):
             messagebox.showerror("Input Error", "Feature name must be unique.")
             return
