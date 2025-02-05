@@ -5,7 +5,8 @@ from cfmtoolbox import Constraint
 
 from cfmtoolbox_editor.utils.cfm_utils import (
     edit_str_to_cardinality,
-    cardinality_to_edit_str, center_window,
+    cardinality_to_edit_str,
+    center_window,
 )
 
 
@@ -48,7 +49,9 @@ class ConstraintDialog:
 
         self.create_widgets()
         self.dialog.update_idletasks()
-        x, y = center_window(self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height())
+        x, y = center_window(
+            self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height()
+        )
         self.dialog.geometry(f"+{x}+{y}")
         self.populate_initial_values()
 

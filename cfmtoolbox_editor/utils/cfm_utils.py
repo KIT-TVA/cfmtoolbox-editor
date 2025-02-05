@@ -119,7 +119,9 @@ def derive_parent_group_cards_for_multiple_children(
     )
 
 
-def center_window(parent_widget: tk.Widget, window_width: int, window_height: int) -> Tuple[int, int]:
+def center_window(
+        parent_widget: tk.Widget, window_width: int, window_height: int
+) -> Tuple[int, int]:
     """
     Calculates the position of the window to appear centered relative to the parent widget.
     :param parent_widget: The widget in which to center the window
@@ -133,11 +135,7 @@ def center_window(parent_widget: tk.Widget, window_width: int, window_height: in
     main_window_width = parent_widget.winfo_width()
     main_window_height = parent_widget.winfo_height()
 
-    window_x = (
-            main_window_x + (main_window_width // 2) - (window_width // 2)
-    )
-    window_y = (
-            main_window_y + (main_window_height // 2) - (window_height // 2)
-    )
+    window_x = main_window_x + (main_window_width // 2) - (window_width // 2)
+    window_y = main_window_y + (main_window_height // 2) - (window_height // 2)
 
     return window_x, window_y

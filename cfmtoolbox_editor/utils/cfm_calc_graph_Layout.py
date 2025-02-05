@@ -18,7 +18,9 @@ class GraphLayoutCalculator:
     An adaption had to be made to account for the different lengths of feature names.
     """
 
-    def __init__(self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int):
+    def __init__(
+            self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+    ):
         self.cfm = cfm
         """The feature model to calculate the layout for."""
 
@@ -64,7 +66,11 @@ class GraphLayoutCalculator:
         :return: The left and right contour of the subtree rooted at the feature.
         """
         left_contour, right_contour = (
-            [floor(max(-self.scale_text * len(feature.name), -self.max_node_width // 2))],
+            [
+                floor(
+                    max(-self.scale_text * len(feature.name), -self.max_node_width // 2)
+                )
+            ],
             [ceil(min(self.scale_text * len(feature.name), self.max_node_width // 2))],
         )
         children = feature.children
@@ -145,14 +151,18 @@ class GraphLayoutCalculator:
             left_contour.append(
                 self.shift[id(children[0])]
                 + children_contours[id(children[0])][0][0]
-                + ceil(min(self.scale_text * len(feature.name), self.max_node_width // 2))
+                + ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             left_contour.extend(current_left_contour[1:])
 
             right_contour.append(
                 self.shift[id(children[-1])]
                 + children_contours[id(children[-1])][1][0]
-                - ceil(min(self.scale_text * len(feature.name), self.max_node_width // 2))
+                - ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             right_contour.extend(current_right_contour[1:])
 

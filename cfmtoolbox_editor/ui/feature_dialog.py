@@ -61,7 +61,9 @@ class FeatureDialog:
 
         self._create_widgets()
         self.dialog.update_idletasks()
-        x, y = center_window(self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height())
+        x, y = center_window(
+            self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height()
+        )
         self.dialog.geometry(f"+{x}+{y}")
         self.dialog.wait_window(self.dialog)
 

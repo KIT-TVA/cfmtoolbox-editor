@@ -248,7 +248,10 @@ class CFMEditorApp:
                 self.canvas.delete(node_id)
                 truncated_name = truncated_name[:-1]
                 node_id = self.canvas.create_text(
-                    x, y, text=truncated_name + "...", tags=(f"feature_text:{feature.name}", feature.name)
+                    x,
+                    y,
+                    text=truncated_name + "...",
+                    tags=(f"feature_text:{feature.name}", feature.name),
                 )
                 bbox = self.canvas.bbox(node_id)
                 width = bbox[2] - bbox[0]
@@ -273,7 +276,10 @@ class CFMEditorApp:
             def on_enter(event):
                 tooltip_bbox = self.canvas.bbox(node_id)
                 if tooltip_bbox:
-                    tooltip_x, tooltip_y = tooltip_bbox[2], tooltip_bbox[1]  # Position at top-right of text
+                    tooltip_x, tooltip_y = (
+                        tooltip_bbox[2],
+                        tooltip_bbox[1],
+                    )  # Position at top-right of text
                     tooltip.show_tip(feature.name, tooltip_x, tooltip_y)
 
             def on_leave(event):
