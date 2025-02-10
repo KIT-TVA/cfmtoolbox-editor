@@ -19,9 +19,10 @@ In the edit dialog, you can change the following:
 
 Click "Save Changes" to confirm your changes.
 In the edit dialog, you can change the following:
+
 - Name: Update the name of the feature. Ensure the new name is unique and does not conflict with existing feature names.
 - Cardinality: Adjust the cardinality values (e.g., 1..1, 0..*, etc.) as needed.
-Click "Save Changes" to confirm your changes.
+  Click "Save Changes" to confirm your changes.
 
 ![Context Menu](../images/edit_feature.png)
 

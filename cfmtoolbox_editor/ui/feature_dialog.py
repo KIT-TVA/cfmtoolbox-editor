@@ -34,7 +34,7 @@ class FeatureDialog:
         self,
         parent_widget,
         cfm,
-        expanded_features,
+        add_expanded_feature_callback,
         update_model_state_callback,
         show_feature_dialog_callback,
         parent_feature=None,
@@ -42,7 +42,7 @@ class FeatureDialog:
     ):
         self.parent_widget = parent_widget  # The Tk root window or parent widget
         self.cfm = cfm
-        self.expanded_features = expanded_features
+        self.add_expanded_feature_callback = add_expanded_feature_callback
         self.update_model_state_callback = update_model_state_callback
         self.show_feature_dialog_callback = show_feature_dialog_callback
         self.parent_feature = parent_feature
@@ -189,7 +189,7 @@ class FeatureDialog:
                 parent=self.parent_feature,
                 children=[],
             )
-            self.expanded_features[id(new_feature)] = True
+            self.add_expanded_feature_callback(new_feature)
             self.parent_feature.children.append(new_feature)
             if len(self.parent_feature.children) == 1:
                 (
