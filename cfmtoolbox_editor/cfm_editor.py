@@ -7,6 +7,7 @@ from typing import Dict
 
 from cfmtoolbox import Feature, CFM
 
+from cfmtoolbox_editor.ui.cfm_tooltip import ToolTip
 from cfmtoolbox_editor.ui.delete_feature_dialog import DeleteFeatureDialog
 from cfmtoolbox_editor.ui.feature_dialog import FeatureDialog
 from cfmtoolbox_editor.utils.cfm_calc_graph_Layout import GraphLayoutCalculator, Point
@@ -18,6 +19,8 @@ from cfmtoolbox_editor.utils.cfm_click_handler import CFMClickHandler
 
 from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
 from cfmtoolbox_editor.ui.cfm_constraints import CFMConstraints
+
+MAX_NODE_WIDTH = 120
 
 
 class CFMEditorApp:
@@ -39,6 +42,8 @@ class CFMEditorApp:
         self.currently_highlighted_feature = None
 
         self.click_handler = CFMClickHandler()
+
+        self.CARDINALITY_FONT = ("Arial", 8)
 
         self._setup_ui()
 
@@ -132,7 +137,7 @@ class CFMEditorApp:
 
     def _draw_model(self):
         self.positions = GraphLayoutCalculator(
-            self.cfm, self.expanded_features
+            self.cfm, self.expanded_features, MAX_NODE_WIDTH
         ).compute_positions()
         self.canvas.delete("all")
         self.draw_feature(self.cfm.root, "middle")
@@ -180,7 +185,7 @@ class CFMEditorApp:
         # Recursively draw children if expanded
         if feature.children and self.expanded_features.get(id(feature), True):
             # arc for group
-            arc_radius = 25
+            arc_radius = 35
             x_center = x
             y_center = y + 10
             left_angle = 180.0
@@ -225,12 +230,32 @@ class CFMEditorApp:
                 self._draw_group_type_card(feature, padded_bbox, x)
 
     def _draw_node(self, feature, x, y):
+        max_width = MAX_NODE_WIDTH
+        padding_x = 4
+        padding_y = 2
+
         node_id = self.canvas.create_text(
             x, y, text=feature.name, tags=(f"feature_text:{feature.name}", feature.name)
         )
         bbox = self.canvas.bbox(node_id)
-        padding_x = 4
-        padding_y = 2
+        width = bbox[2] - bbox[0]
+
+        truncated = False
+        if width > max_width:
+            truncated = True
+            truncated_name = feature.name
+            while width > max_width - 10:
+                self.canvas.delete(node_id)
+                truncated_name = truncated_name[:-1]
+                node_id = self.canvas.create_text(
+                    x,
+                    y,
+                    text=truncated_name + "...",
+                    tags=(f"feature_text:{feature.name}", feature.name),
+                )
+                bbox = self.canvas.bbox(node_id)
+                width = bbox[2] - bbox[0]
+
         padded_bbox = (
             bbox[0] - padding_x,
             bbox[1] - padding_y,
@@ -243,6 +268,25 @@ class CFMEditorApp:
             tags=(f"feature_rect:{feature.name}", feature.name),
         )
         self.canvas.tag_raise(node_id, rect_id)
+
+        # Attach tooltip to show full feature name if truncated
+        if truncated:
+            tooltip = ToolTip(self.canvas)
+
+            def on_enter(event):
+                tooltip_bbox = self.canvas.bbox(node_id)
+                if tooltip_bbox:
+                    tooltip_x, tooltip_y = (
+                        tooltip_bbox[2],
+                        tooltip_bbox[1],
+                    )  # Position at top-right of text
+                    tooltip.show_tip(feature.name, tooltip_x, tooltip_y)
+
+            def on_leave(event):
+                tooltip.hide_tip()
+
+            self.canvas.tag_bind(node_id, "<Enter>", on_enter)
+            self.canvas.tag_bind(node_id, "<Leave>", on_leave)
         return node_id, padded_bbox
 
     def _draw_feat_instance_card(
@@ -266,20 +310,21 @@ class CFMEditorApp:
             feature_instance_x,
             feature_instance_y,
             text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_feature_instance",
             anchor=anchor,
         )
 
     def _draw_collapse_expand_button(self, feature, padded_bbox, y):
         expanded = self.expanded_features.get(id(feature), True)
-        # TODO: Maybe add colors
-        button_text = "-" if expanded else "+"
+        button_text, button_color = ("-", "firebrick") if expanded else ("+", "green")
         button_id = self.canvas.create_text(
             padded_bbox[2] + 10,
             y,
             text=button_text,
             tags="button",
             font=Font(weight="bold"),
+            fill=button_color,
         )
         self.canvas.tag_bind(
             button_id,
@@ -291,7 +336,7 @@ class CFMEditorApp:
         # Calculate text position for group instance cardinality with linear interpolation
         slope = (new_x - x) / (new_y - 10 - (y + 10))
         group_instance_y = padded_bbox[3] + 10
-        group_instance_x = x + slope * (group_instance_y - (y + 10)) + 5
+        group_instance_x = x + slope * (group_instance_y - (y + 10)) + 7
         # anchor w means west, so the left side of the text is placed at the specified position
         self.canvas.create_text(
             group_instance_x,
@@ -299,17 +344,19 @@ class CFMEditorApp:
             text=cardinality_to_display_str(
                 feature.group_instance_cardinality, "<", ">"
             ),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_instance",
             anchor=tk.W,
         )
 
     def _draw_group_type_card(self, feature, padded_bbox, x):
         # bbox[3] is the y-coordinate of the bottom of the text box
-        group_type_y = padded_bbox[3] + 10
+        group_type_y = padded_bbox[3] + 20
         self.canvas.create_text(
             x,
             group_type_y,
             text=cardinality_to_display_str(feature.group_type_cardinality, "[", "]"),
+            font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_type",
         )
 
