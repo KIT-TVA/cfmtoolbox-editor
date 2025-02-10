@@ -13,11 +13,11 @@ from cfmtoolbox_editor.utils.cfm_utils import cardinality_to_display_str
 
 class CFMCanvas:
     def __init__(
-            self,
-            main_frame,
-            tk_root,
-            editor,
-            click_handler,
+        self,
+        main_frame,
+        tk_root,
+        editor,
+        click_handler,
     ):
         self.main_frame = main_frame
         self.tk_root = tk_root
@@ -137,12 +137,12 @@ class CFMCanvas:
                 # Calculate angles for the group arc and adjust to canvas coordinate system
                 if i == 0:
                     left_angle = (
-                                         degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
-                                 ) % 360
+                        degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
+                    ) % 360
                 if (i == len(feature.children) - 1) and (len(feature.children) > 1):
                     right_angle = (
-                                          degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
-                                  ) % 360
+                        degrees(atan2((new_y - y_center), (new_x - x_center))) + 180
+                    ) % 360
 
                     self._draw_group_instance_card(
                         feature, new_x, new_y, padded_bbox, x, y
@@ -226,7 +226,7 @@ class CFMCanvas:
         return node_id, padded_bbox
 
     def _draw_feat_instance_card(
-            self, feature, feature_instance_card_pos, padded_bbox, x
+        self, feature, feature_instance_card_pos, padded_bbox, x
     ):
         # bbox[1] is the y-coordinate of the top side of the box
         anchor: str
@@ -354,7 +354,8 @@ class CFMCanvas:
                 None,
             )
             second_feature = next(
-                (f for f in self.editor.cfm.features if f.name == second_feature_name), None
+                (f for f in self.editor.cfm.features if f.name == second_feature_name),
+                None,
             )
 
             if not second_feature:

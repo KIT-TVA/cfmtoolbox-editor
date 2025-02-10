@@ -170,7 +170,7 @@ class CFMConstraints:
         self.constraint_dialog(constraint=constraint)
 
     def constraint_dialog(
-            self, constraint=None, initial_first_feature=None, initial_second_feature=None
+        self, constraint=None, initial_first_feature=None, initial_second_feature=None
     ):
         """
         Opens a dialog for adding or editing a constraint. If `constraint` is provided, it will edit the existing

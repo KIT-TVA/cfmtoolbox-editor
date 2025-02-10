@@ -29,7 +29,9 @@ class CFMMenuBar:
         self._add_menu_command(
             edit_menu,
             "Add Feature",
-            lambda: self.editor.add_feature(self.editor.get_currently_highlighted_feature()),
+            lambda: self.editor.add_feature(
+                self.editor.get_currently_highlighted_feature()
+            ),
             "ADD_FEATURE",
         )
         self._add_menu_command(
@@ -43,7 +45,9 @@ class CFMMenuBar:
         self._add_menu_command(
             edit_menu,
             "Edit Feature",
-            lambda: self.editor.edit_feature(self.editor.get_currently_highlighted_feature()),
+            lambda: self.editor.edit_feature(
+                self.editor.get_currently_highlighted_feature()
+            ),
             "EDIT_FEATURE",
         )
         self._add_menu_command(
@@ -61,7 +65,7 @@ class CFMMenuBar:
 
         def wrapped_command():
             if (
-                    self.editor.get_currently_highlighted_feature()
+                self.editor.get_currently_highlighted_feature()
                 or label in NO_FEATURE_REQUIRED
             ):
                 command_func()

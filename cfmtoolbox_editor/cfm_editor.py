@@ -53,9 +53,7 @@ class CFMEditorApp:
         self.constraints = CFMConstraints(main_frame, self, self.click_handler)
 
         # Canvas (for model graph)
-        self.canvas = CFMCanvas(
-            main_frame, self.root, self, self.click_handler
-        )
+        self.canvas = CFMCanvas(main_frame, self.root, self, self.click_handler)
 
         # TODO: is that necessary?
         # Update the shortcut manager with the new editor instance

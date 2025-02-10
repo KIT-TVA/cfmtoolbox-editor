@@ -12,12 +12,12 @@ from cfmtoolbox_editor.utils.cfm_utils import (
 
 class DeleteFeatureDialog:
     def __init__(
-            self,
-            parent_widget,
-            feature: Feature,
-            cfm,
-            update_model_state_callback,
-            show_feature_dialog_callback,
+        self,
+        parent_widget,
+        feature: Feature,
+        cfm,
+        update_model_state_callback,
+        show_feature_dialog_callback,
     ):
         """
         Dialog for deleting a feature. Allows the user to either delete the subtree or transfer children to the parent.
@@ -95,7 +95,7 @@ class DeleteFeatureDialog:
                 c
                 for c in self.cfm.constraints
                 if c.first_feature not in self.feature.children
-                   and c.second_feature not in self.feature.children
+                and c.second_feature not in self.feature.children
             ]
         else:
             # Transfer children to the parent
