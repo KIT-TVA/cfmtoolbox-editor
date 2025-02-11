@@ -1,3 +1,12 @@
+"""
+This module defines the DeleteFeatureDialog class, which is responsible for creating and managing
+a dialog for deleting a feature in a feature model using the Tkinter library. The dialog allows
+the user to either delete the entire subtree or transfer the children to the parent feature.
+
+Classes:
+    DeleteFeatureDialog: A class to create and manage a dialog for deleting a feature.
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 
@@ -40,7 +49,9 @@ class DeleteFeatureDialog:
         self.create_dialog()
 
     def create_dialog(self):
-        """Creates and displays the dialog."""
+        """
+        Creates and displays the dialog.
+        """
         self.dialog = tk.Toplevel(self.parent_widget)
         self.dialog.title("Delete Feature")
         self.dialog.geometry("300x150")
@@ -79,7 +90,12 @@ class DeleteFeatureDialog:
         self.dialog.wait_window(self.dialog)
 
     def submit(self, delete_subtree: bool):
-        """Handles the deletion logic based on the user's choice."""
+        """
+        Handles the deletion logic based on the user's choice.
+
+        Args:
+            delete_subtree (bool): If True, delete the entire subtree. If False, transfer children to the parent.
+        """
         parent = self.feature.parent
         if not parent:
             messagebox.showerror("Error", "Cannot delete root feature.")

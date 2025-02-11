@@ -1,15 +1,34 @@
+"""
+This module defines the ShortcutManager class, which is responsible for managing keyboard shortcuts
+for the feature model editor using the Tkinter library.
+
+Classes:
+    ShortcutManager: A class to manage keyboard shortcuts for the feature model editor.
+"""
+
 import platform
 
 
 class ShortcutManager:
     def __init__(self, editor_app):
+        """
+        Initialize the ShortcutManager with the editor application instance.
+
+        Args:
+            editor_app: The editor application instance.
+        """
         self.editor = editor_app
         self.is_mac = platform.system() == "Darwin"
         self._define_shortcuts()
         self._setup_shortcuts()
 
     def update_editor(self, editor_app):
-        """Update the editor_app instance."""
+        """
+        Update the editor application instance.
+
+        Args:
+            editor_app: The new editor application instance.
+        """
         self.editor = editor_app
         self._setup_shortcuts()
 
