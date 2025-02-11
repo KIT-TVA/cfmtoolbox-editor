@@ -22,9 +22,11 @@ Click "OK" or "Cancel" to proceed with the deletion.
 
 **Undo:** If you accidentally delete a feature, you can use the Undo option (Ctrl+Z or Cmd+Z) to restore it.
 
-**Impact:** Deleting a feature will also remove all its child features and any constraints associated with it. Ensure this is intended before confirming.
+**Impact:** Deleting a feature will also remove all its child features and any constraints associated with it. Ensure
+this is intended before confirming.
 
 # Example
+
 Here’s an example of how the feature tree might look before and after deleting a feature:
 
 **Before**
@@ -37,6 +39,7 @@ Root Feature
 ```
 
 **After Deleting "Feature A"**
+
 ``` Shell
 Root Feature
 └── Feature B

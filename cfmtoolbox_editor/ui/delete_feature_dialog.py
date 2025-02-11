@@ -1,3 +1,12 @@
+"""
+This module defines the DeleteFeatureDialog class, which is responsible for creating and managing
+a dialog for deleting a feature in a feature model using the Tkinter library. The dialog allows
+the user to either delete the entire subtree or transfer the children to the parent feature.
+
+Classes:
+    DeleteFeatureDialog: A class to create and manage a dialog for deleting a feature.
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 
@@ -6,6 +15,7 @@ from cfmtoolbox import Cardinality, Feature
 from cfmtoolbox_editor.utils.cfm_utils import (
     derive_parent_group_cards_for_one_child,
     derive_parent_group_cards_for_multiple_children,
+    center_window,
 )
 
 
@@ -39,7 +49,9 @@ class DeleteFeatureDialog:
         self.create_dialog()
 
     def create_dialog(self):
-        """Creates and displays the dialog."""
+        """
+        Creates and displays the dialog.
+        """
         self.dialog = tk.Toplevel(self.parent_widget)
         self.dialog.title("Delete Feature")
         self.dialog.geometry("300x150")
@@ -70,14 +82,25 @@ class DeleteFeatureDialog:
             side="left", padx=5
         )
 
+        self.dialog.update_idletasks()
+        x, y = center_window(
+            self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height()
+        )
+        self.dialog.geometry(f"+{x}+{y}")
         self.dialog.wait_window(self.dialog)
 
     def submit(self, delete_subtree: bool):
-        """Handles the deletion logic based on the user's choice."""
+        """
+        Handles the deletion logic based on the user's choice.
+
+        Args:
+            delete_subtree (bool): If True, delete the entire subtree. If False, transfer children to the parent.
+        """
         parent = self.feature.parent
         if not parent:
             messagebox.showerror("Error", "Cannot delete root feature.")
-            self.dialog.destroy()
+            if self.dialog:
+                self.dialog.destroy()
             return
 
         former_number_of_children = len(parent.children)
@@ -127,7 +150,8 @@ class DeleteFeatureDialog:
             group_created = True
 
         self.update_model_state()
-        self.dialog.destroy()
+        if self.dialog:
+            self.dialog.destroy()
 
         if group_created:
             messagebox.showinfo(

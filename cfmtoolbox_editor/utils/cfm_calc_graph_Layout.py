@@ -1,3 +1,13 @@
+"""
+This module defines the GraphLayoutCalculator class, which uses an adaptation of the Reingold-Tilford algorithm
+to calculate the positions of features in a feature model. It ensures a planar, leveled drawing where the parent
+is centered above its children.
+
+Classes:
+    Point: A data class representing a point with x and y coordinates.
+    GraphLayoutCalculator: A class to calculate the layout positions of features in a feature model.
+"""
+
 from typing import List, Tuple
 from math import ceil, floor
 from dataclasses import dataclass
@@ -18,12 +28,25 @@ class GraphLayoutCalculator:
     An adaption had to be made to account for the different lengths of feature names.
     """
 
-    def __init__(self, cfm: CFM, expanded_features: dict[int, bool]):
+    def __init__(
+        self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+    ):
+        """
+        Initialize the GraphLayoutCalculator with the specified parameters.
+
+        Args:
+            cfm (CFM): The feature model to calculate the layout for.
+            expanded_features (dict[int, bool]): Dictionary to track expanded/collapsed state of features.
+            max_node_width (int): The maximum width of a node in the graph. If the text is longer, it will be cut off.
+        """
         self.cfm = cfm
         """The feature model to calculate the layout for."""
 
         self.expanded_features = expanded_features
         """Only calculate positions for expanded features."""
+
+        self.max_node_width: int = max_node_width
+        """The maximum width of a node in the graph. If the text is longer, it will be cut off."""
 
         self.pos = {id(feature): Point(0, 0) for feature in cfm.features}
         """The final positions of the features in the feature model."""
@@ -36,15 +59,26 @@ class GraphLayoutCalculator:
         self.scale_text = 3
 
     def compute_positions(self) -> dict[int, Point]:
-        """Computes the coordinates of all features with the Reingold-Tilford algorithm. The dictionary can be accessed
-        with the feature id."""
+        """
+        Computes the coordinates of all features with the Reingold-Tilford algorithm. The dictionary can be accessed
+        with the feature id.
+
+        Returns:
+            dict[int, Point]: The computed positions of the features.
+        """
         self._compute_y(self.cfm.root, 0)
         self._compute_shift(self.cfm.root)
         self._compute_x(self.cfm.root)
         return self.pos
 
     def _compute_y(self, feature: Feature, depth: int):
-        """The leveled y coordinate is calculated by a simple breadth-first traversal."""
+        """
+        The leveled y coordinate is calculated by a simple breadth-first traversal.
+
+        Args:
+            feature (Feature): The current feature to calculate the y-coordinate for.
+            depth (int): The current depth in the tree.
+        """
         self.pos[id(feature)].y = depth * 100 + 50
         if self.expanded_features[id(feature)]:
             for child in feature.children:
@@ -57,12 +91,20 @@ class GraphLayoutCalculator:
         possible without overlapping. The parent is placed in the middle of the children and the shifts of the children
         are calculated relative to the parent. The method returns the contour of the subtree and the shift is saved in
         the according field.
-        :param feature: The current feature to calculate the shift for.
-        :return: The left and right contour of the subtree rooted at the feature.
+
+        Args:
+            feature (Feature): The current feature to calculate the shift for.
+
+        Returns:
+            Tuple[List[int], List[int]]: The left and right contour of the subtree rooted at the feature.
         """
         left_contour, right_contour = (
-            [floor(-self.scale_text * len(feature.name))],
-            [ceil(self.scale_text * len(feature.name))],
+            [
+                floor(
+                    max(-self.scale_text * len(feature.name), -self.max_node_width // 2)
+                )
+            ],
+            [ceil(min(self.scale_text * len(feature.name), self.max_node_width // 2))],
         )
         children = feature.children
         if (
@@ -142,20 +184,30 @@ class GraphLayoutCalculator:
             left_contour.append(
                 self.shift[id(children[0])]
                 + children_contours[id(children[0])][0][0]
-                + ceil(self.scale_text * len(feature.name))
+                + ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             left_contour.extend(current_left_contour[1:])
 
             right_contour.append(
                 self.shift[id(children[-1])]
                 + children_contours[id(children[-1])][1][0]
-                - ceil(self.scale_text * len(feature.name))
+                - ceil(
+                    min(self.scale_text * len(feature.name), self.max_node_width // 2)
+                )
             )
             right_contour.extend(current_right_contour[1:])
 
             return left_contour, right_contour
 
     def _compute_x(self, feature: Feature):
+        """
+        The x coordinate is calculated by a simple depth-first traversal.
+
+        Args:
+            feature (Feature): The current feature to calculate the x-coordinate for.
+        """
         parent = feature.parent
         if parent is None:
             self.pos[id(feature)].x = 400

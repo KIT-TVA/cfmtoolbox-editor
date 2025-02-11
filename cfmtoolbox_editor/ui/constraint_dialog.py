@@ -1,3 +1,11 @@
+"""
+This module defines the ConstraintDialog class, which is responsible for creating and managing
+a dialog for adding or editing constraints in a feature model using the Tkinter library.
+
+Classes:
+    ConstraintDialog: A class to create and manage a dialog for adding or editing constraints.
+"""
+
 import tkinter as tk
 from tkinter import ttk, messagebox, StringVar
 
@@ -6,19 +14,30 @@ from cfmtoolbox import Constraint
 from cfmtoolbox_editor.utils.cfm_utils import (
     edit_str_to_cardinality,
     cardinality_to_edit_str,
+    center_window,
 )
 
 
 class ConstraintDialog:
     def __init__(
         self,
-        parent,
+        parent_widget,
         editor,
         constraint=None,
         initial_first_feature=None,
         initial_second_feature=None,
     ):
-        self.parent = parent
+        """
+        Initialize the ConstraintDialog with the specified parameters.
+
+        Args:
+            parent_widget (tk.Widget): The parent widget for the dialog.
+            editor: The editor instance managing the feature model.
+            constraint (Constraint, optional): The constraint to edit. Defaults to None.
+            initial_first_feature (Feature, optional): The first feature to preselect. Defaults to None.
+            initial_second_feature (Feature, optional): The second feature to preselect. Defaults to None.
+        """
+        self.parent_widget = parent_widget
         self.editor = editor
         self.constraint = constraint
         self.initial_first_feature = initial_first_feature
@@ -40,16 +59,27 @@ class ConstraintDialog:
         self.setup_dialog()
 
     def setup_dialog(self):
-        self.dialog = tk.Toplevel(self.parent)
+        """
+        Set up the dialog window and its widgets.
+        """
+        self.dialog = tk.Toplevel(self.parent_widget)
         self.dialog.title("Edit Constraint" if self.constraint else "Add Constraint")
         self.dialog.geometry("750x100")
-        self.dialog.transient(self.parent)
+        self.dialog.transient(self.parent_widget)
         self.dialog.grab_set()
 
         self.create_widgets()
+        self.dialog.update_idletasks()
+        x, y = center_window(
+            self.parent_widget, self.dialog.winfo_width(), self.dialog.winfo_height()
+        )
+        self.dialog.geometry(f"+{x}+{y}")
         self.populate_initial_values()
 
     def create_widgets(self):
+        """
+        Create the widgets for the dialog.
+        """
         feature_names = [feature.name for feature in self.editor.cfm.features]
         feature_names.sort(key=str.casefold)
 
@@ -111,6 +141,9 @@ class ConstraintDialog:
         )
 
     def populate_initial_values(self):
+        """
+        Populate the initial values in the dialog based on the provided constraint or initial features.
+        """
         if self.constraint:
             self.first_feature_var.set(self.constraint.first_feature.name)
             self.second_feature_var.set(self.constraint.second_feature.name)
@@ -130,6 +163,9 @@ class ConstraintDialog:
             )
 
     def on_submit(self):
+        """
+        Handle the submission of the dialog, creating or updating the constraint.
+        """
         selected_first_feature = self.first_feature_var.get().strip()
         selected_second_feature = self.second_feature_var.get().strip()
         if not selected_first_feature or not selected_second_feature:
@@ -170,5 +206,11 @@ class ConstraintDialog:
         self.dialog.destroy()
 
     def show(self):
+        """
+        Show the dialog and wait for it to be closed.
+
+        Returns:
+            Constraint: The created or edited constraint, or None if the dialog was cancelled.
+        """
         self.dialog.wait_window()
         return self.result
