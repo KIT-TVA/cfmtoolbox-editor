@@ -1,3 +1,12 @@
+"""
+This module defines the CFMCanvas class, which is responsible for rendering and interacting with a feature model
+using the Tkinter library. The CFMCanvas class provides functionalities to draw features, manage their expanded/collapsed
+states, and handle user interactions such as adding, editing, and deleting features, as well as adding constraints between them.
+
+Classes:
+    CFMCanvas: A class to create and manage a canvas for displaying and interacting with a feature model.
+"""
+
 import tkinter as tk
 from math import degrees, atan2
 from tkinter import ttk, messagebox
@@ -39,9 +48,18 @@ class CFMCanvas:
         self._create_canvas()
 
     def initialize(self):
+        """
+        Initialize the canvas by setting the initial states of all features.
+        """
         self.initialize_feature_states(self.editor.cfm.root)
 
     def initialize_feature_states(self, feature):
+        """
+        Recursively initialize the expanded/collapsed states of all features.
+
+        Args:
+            feature (Feature): The feature to initialize.
+        """
         # Initialize all features as expanded
         self.expanded_features[id(feature)] = True
         for child in feature.children:
@@ -72,12 +90,27 @@ class CFMCanvas:
         self.h_scroll.pack(side=tk.BOTTOM, fill=tk.X, padx=self.v_scroll.winfo_width())
 
     def clear(self):
+        """
+        Clear all elements from the canvas.
+        """
         self.canvas.delete("all")
 
     def configure_scroll_region(self, x_min, y_min, x_max, y_max):
+        """
+        Configure the scroll region of the canvas.
+
+        Args:
+            x_min (int): Minimum x-coordinate of the scroll region.
+            y_min (int): Minimum y-coordinate of the scroll region.
+            x_max (int): Maximum x-coordinate of the scroll region.
+            y_max (int): Maximum y-coordinate of the scroll region.
+        """
         self.canvas.config(scrollregion=(x_min, y_min, x_max, y_max))
 
     def draw_model(self):
+        """
+        Draw the entire feature model on the canvas.
+        """
         self.positions = GraphLayoutCalculator(
             self.editor.cfm, self.expanded_features, self.MAX_NODE_WIDTH
         ).compute_positions()
@@ -332,6 +365,12 @@ class CFMCanvas:
         self.editor.update_model_state()
 
     def add_constraint(self, feature):
+        """
+        Start the process of adding a constraint between features.
+
+        Args:
+            feature (Feature): The feature to start the constraint from.
+        """
         feature_node = self.canvas.find_withtag(f"feature_rect:{feature.name}")
         if feature_node:
             self.canvas.itemconfig(feature_node[0], fill="lightblue")
@@ -383,6 +422,9 @@ class CFMCanvas:
         self.canvas.bind(self.click_handler.left_click(), on_canvas_click)
 
     def cancel_add_constraint(self):
+        """
+        Cancel the process of adding a constraint.
+        """
         self.canvas.delete(self.info_label)
         self.canvas.delete(self.cancel_button_window)
         self.canvas.unbind(self.click_handler.left_click())
@@ -395,4 +437,10 @@ class CFMCanvas:
             self.currently_highlighted_feature = None
 
     def add_expanded_feature(self, feature: Feature):
+        """
+        Mark a feature as expanded.
+
+        Args:
+            feature (Feature): The feature to mark as expanded.
+        """
         self.expanded_features[id(feature)] = True

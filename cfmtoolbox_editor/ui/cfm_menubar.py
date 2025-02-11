@@ -1,13 +1,38 @@
+"""
+This module defines the CFMMenuBar class, which is responsible for creating and managing the menu bar
+in the feature model editor using the Tkinter library. The CFMMenuBar class provides functionalities to
+add menu items for file operations, editing features, and managing constraints.
+
+Classes:
+    CFMMenuBar: A class to create and manage the menu bar for the feature model editor.
+"""
+
 from tkinter import Menu, messagebox
 
 
 class CFMMenuBar:
     def __init__(self, root, editor):
+        """
+        Initialize the CFMMenuBar with the root Tkinter window and the editor instance.
+
+        Args:
+            root (tk.Tk): The root Tkinter window.
+            editor: The editor instance managing the feature model.
+        """
         self.root = root
         self.editor = editor
         self.menubar = Menu(root)
         self.shortcut_manager = editor.shortcut_manager
         self._create_menus()
+
+    def get_menubar(self):
+        """
+        Get the menu bar widget.
+
+        Returns:
+            Menu: The menu bar widget.
+        """
+        return self.menubar
 
     def _create_menus(self):
         self._create_file_menu()
@@ -79,6 +104,3 @@ class CFMMenuBar:
             if shortcut_key
             else None,
         )
-
-    def get_menubar(self):
-        return self.menubar

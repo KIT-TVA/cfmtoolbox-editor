@@ -1,3 +1,11 @@
+"""
+This module defines the FeatureDialog class, which is responsible for creating and managing
+a dialog for adding or editing features in a feature model using the Tkinter library.
+
+Classes:
+    FeatureDialog: A class to create and manage a dialog for adding or editing features.
+"""
+
 from tkinter import messagebox
 from tkinter import Toplevel, Label, Entry, StringVar, Button
 
@@ -40,6 +48,18 @@ class FeatureDialog:
         parent_feature=None,
         feature=None,
     ):
+        """
+        Initialize the FeatureDialog with the specified parameters.
+
+        Args:
+            parent_widget (tk.Widget): The parent widget for the dialog.
+            cfm: The feature model containing the list of features.
+            add_expanded_feature_callback (callable): Callback to mark a feature as expanded.
+            update_model_state_callback (callable): Callback to update the model state.
+            show_feature_dialog_callback (callable): Callback to reopen the dialog for a parent feature.
+            parent_feature (Feature, optional): The parent feature for the new feature. Defaults to None.
+            feature (Feature, optional): The feature being edited. Defaults to None.
+        """
         self.parent_widget = parent_widget  # The Tk root window or parent widget
         self.cfm = cfm
         self.add_expanded_feature_callback = add_expanded_feature_callback
@@ -68,6 +88,9 @@ class FeatureDialog:
         self.dialog.wait_window(self.dialog)
 
     def _create_widgets(self):
+        """
+        Create the widgets for the dialog.
+        """
         current_name = self.feature.name if self.feature else ""
         current_feature_card = (
             cardinality_to_edit_str(self.feature.instance_cardinality)
@@ -122,6 +145,9 @@ class FeatureDialog:
         ).grid(row=4, column=0, columnspan=2, pady=10)
 
     def _on_submit(self):
+        """
+        Handle the submission of the dialog, creating or updating the feature.
+        """
         feature_name = self.name_var.get().strip()
         if not feature_name:
             messagebox.showerror("Input Error", "Feature name cannot be empty.")
