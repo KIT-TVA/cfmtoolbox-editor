@@ -80,3 +80,17 @@ nav:
       - Edit Feature: editor-usage/edit_feature.md
   - Framework:
       - Contributing: framework/contributing.md
+      - API Reference:
+          - Editor: framework/api/editor.md
+          - UI Components:
+              - Canvas: framework/api/ui/canvas.md
+              - Tooltip: framework/api/ui/tooltip.md
+              - Menu Bar: framework/api/ui/menubar.md
+              - Constraints: framework/api/ui/constraints.md
+              - Dialogs: framework/api/ui/dialogs.md
+          - Utils:
+              - Click Handler: framework/api/utils/click_handler.md
+              - Shortcuts: framework/api/utils/shortcuts.md
+              - Calculate Graph Layout: framework/api/utils/calc_graph_Layout.md
+              - Undo Redo: framework/api/utils/editor_undo_redo.md
+              - Utils: framework/api/utils/utils.md
