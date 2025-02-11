@@ -1,3 +1,12 @@
+"""
+This module defines the CFMEditorApp class, which is responsible for managing the feature model editor
+using the Tkinter library. The CFMEditorApp class provides functionalities to add, edit, delete features,
+manage constraints, and handle undo/redo operations.
+
+Classes:
+    CFMEditorApp: A class to create and manage the feature model editor application.
+"""
+
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
@@ -15,11 +24,12 @@ from cfmtoolbox_editor.utils.cfm_click_handler import CFMClickHandler
 from cfmtoolbox_editor.ui.cfm_menubar import CFMMenuBar
 from cfmtoolbox_editor.ui.cfm_constraints import CFMConstraints
 
-MAX_NODE_WIDTH = 120
-
 
 class CFMEditorApp:
     def __init__(self):
+        """
+        Initialize the CFMEditorApp with the necessary components and UI setup.
+        """
         self.cfm = None
         self.root = tk.Tk()
         self.root.title("CFM Editor")
@@ -34,6 +44,15 @@ class CFMEditorApp:
         self._setup_ui()
 
     def start(self, cfm: CFM) -> CFM:
+        """
+        Start the editor application with the given feature model.
+
+        Args:
+            cfm (CFM): The feature model to edit.
+
+        Returns:
+            CFM: The edited feature model.
+        """
         self.cfm = cfm
         self.undo_redo_manager.set_initial_state(self.cfm)
         self.canvas.initialize()
@@ -66,20 +85,32 @@ class CFMEditorApp:
         return tk.messagebox.askokcancel("Save", "Do you want to save changes?")
 
     def save_model(self):
+        """
+        Save the current state of the feature model.
+        """
         if self._confirm_save_changes():
             self.root.quit()
 
     def reset_model(self):
+        """
+        Reset the feature model to its initial state.
+        """
         original_state = self.undo_redo_manager.reset()
         if original_state:
             self._load_state(original_state)
 
     def undo(self):
+        """
+        Undo the last action.
+        """
         previous_state = self.undo_redo_manager.undo()
         if previous_state:
             self._load_state(previous_state)
 
     def redo(self):
+        """
+        Redo the last undone action.
+        """
         next_state = self.undo_redo_manager.redo()
         if next_state:
             self._load_state(next_state)
@@ -91,19 +122,35 @@ class CFMEditorApp:
         self.update_constraints()
 
     def update_model_state(self):
-        # Call after every change
+        """
+        Update the model state after any change.
+        """
         self.undo_redo_manager.add_state(self.cfm)
         self.canvas.draw_model()
         self.update_constraints()
 
     def add_constraint(self, feature):
+        """
+        Start the process of adding a constraint between features.
+
+        Args:
+            feature (Feature): The feature to start the constraint from.
+        """
         self.canvas.add_constraint(feature)
 
     def update_constraints(self):
+        """
+        Update the constraints displayed in the treeview.
+        """
         self.constraints.update_constraints(self.cfm.constraints)
 
     def delete_constraint(self, constraint):
-        # Ask user if they are sure
+        """
+        Delete a constraint from the feature model.
+
+        Args:
+            constraint (Constraint): The constraint to delete.
+        """
         if not messagebox.askokcancel(
             "Delete Constraint",
             f"Are you sure you want to delete the constraint between "
@@ -114,12 +161,30 @@ class CFMEditorApp:
         self.update_constraints()
 
     def add_feature(self, parent):
+        """
+        Add a new feature to the feature model.
+
+        Args:
+            parent (Feature): The parent feature to add the new feature to.
+        """
         self.show_feature_dialog(parent=parent)
 
     def edit_feature(self, feature):
+        """
+        Edit an existing feature in the feature model.
+
+        Args:
+            feature (Feature): The feature to edit.
+        """
         self.show_feature_dialog(feature=feature)
 
     def delete_feature(self, feature):
+        """
+        Delete a feature from the feature model.
+
+        Args:
+            feature (Feature): The feature to delete.
+        """
         # root
         if feature == self.cfm.root:
             messagebox.showerror("Error", "Cannot delete root feature.")
@@ -142,8 +207,13 @@ class CFMEditorApp:
         else:
             self.show_delete_dialog(feature)
 
-    # This is only used for inner nodes, so it is safe to assume that the feature has children and a parent.
     def show_delete_dialog(self, feature: Feature):
+        """
+        Show the dialog for deleting a feature.
+
+        Args:
+            feature (Feature): The feature to delete.
+        """
         DeleteFeatureDialog(
             parent_widget=self.root,  # Pass the parent widget (e.g., the root window)
             feature=feature,  # The feature to be deleted
@@ -152,10 +222,16 @@ class CFMEditorApp:
             show_feature_dialog_callback=self.show_feature_dialog,  # Callback to open the feature dialog
         )
 
-    # Used for adding and editing features. If feature is None, a new feature is added, otherwise the feature is edited.
     def show_feature_dialog(
         self, parent: Feature | None = None, feature: Feature | None = None
     ):
+        """
+        Show the dialog for adding or editing a feature.
+
+        Args:
+            parent (Feature, optional): The parent feature for the new feature. Defaults to None.
+            feature (Feature, optional): The feature being edited. Defaults to None.
+        """
         FeatureDialog(
             parent_widget=self.root,
             cfm=self.cfm,
@@ -167,12 +243,33 @@ class CFMEditorApp:
         )
 
     def add_expanded_feature(self, feature: Feature):
+        """
+        Mark a feature as expanded.
+
+        Args:
+            feature (Feature): The feature to mark as expanded.
+        """
         self.canvas.add_expanded_feature(feature)
 
     def get_currently_highlighted_feature(self) -> Feature | None:
+        """
+        Get the currently highlighted feature.
+
+        Returns:
+            Feature | None: The currently highlighted feature, or None if no feature is highlighted.
+        """
         return self.canvas.currently_highlighted_feature
 
     def get_feature_by_name(self, name: str) -> Feature | None:
+        """
+        Get a feature by its name.
+
+        Args:
+            name (str): The name of the feature.
+
+        Returns:
+            Feature | None: The feature with the specified name, or None if no such feature exists.
+        """
         for feature in self.cfm.features:
             if feature.name == name:
                 return feature
