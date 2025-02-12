@@ -160,39 +160,6 @@ class CFMEditorApp:
         self.cfm.constraints.remove(constraint)
         self.update_model_state()
 
-    def toggle_children(self, event, feature):
-        self.expanded_features[id(feature)] = not self.expanded_features.get(
-            id(feature), True
-        )
-        self._update_model_state()
-
-    def on_right_click_node(self, event, feature):
-        menu = Menu(self.root, tearoff=0)
-        menu.add_command(label="Add Child", command=lambda: self.add_feature(feature))
-        menu.add_command(
-            label="Edit Feature", command=lambda: self.edit_feature(feature)
-        )
-        menu.add_command(
-            label="Delete Feature", command=lambda: self.delete_feature(feature)
-        )
-        menu.add_command(
-            label="Add Constraint", command=lambda: self.add_constraint(feature)
-        )
-        menu.post(event.x_root, event.y_root)
-
-    def on_left_click_node(self, event, feature):
-        if self.currently_highlighted_feature:
-            previous_node = self.canvas.find_withtag(
-                f"feature_rect:{self.currently_highlighted_feature.name}"
-            )
-            if previous_node:
-                self.canvas.itemconfig(previous_node[0], fill="lightgrey")
-
-        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
-        if node_id:
-            self.canvas.itemconfig(node_id[0], fill="lightblue")
-            self.currently_highlighted_feature = feature
-
     def add_feature(self, parent):
         """
         Add a new feature to the feature model.
