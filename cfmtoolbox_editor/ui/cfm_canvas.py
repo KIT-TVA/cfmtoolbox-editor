@@ -274,11 +274,10 @@ class CFMCanvas:
                 anchor = tk.CENTER
                 feature_instance_x = x
         feature_instance_y = padded_bbox[1] - 10
-        # TODO: The brackets don't look nice
         self.canvas.create_text(
             feature_instance_x,
             feature_instance_y,
-            text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            text=cardinality_to_display_str(feature.instance_cardinality, "⟨", "⟩"),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_feature_instance",
             anchor=anchor,
@@ -311,7 +310,7 @@ class CFMCanvas:
             group_instance_x,
             group_instance_y,
             text=cardinality_to_display_str(
-                feature.group_instance_cardinality, "<", ">"
+                feature.group_instance_cardinality, "⟨", "⟩"
             ),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_instance",
