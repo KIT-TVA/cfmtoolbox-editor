@@ -133,10 +133,10 @@ class CFMConstraints:
                 "end",
                 values=(
                     constraint.first_feature.name,
-                    cardinality_to_display_str(constraint.first_cardinality, "<", ">"),
+                    cardinality_to_display_str(constraint.first_cardinality, "⟨", "⟩"),
                     "requires" if constraint.require else "excludes",
                     constraint.second_feature.name,
-                    cardinality_to_display_str(constraint.second_cardinality, "<", ">"),
+                    cardinality_to_display_str(constraint.second_cardinality, "⟨", "⟩"),
                     "🖉",
                     "🗑️",
                 ),
@@ -241,4 +241,4 @@ class CFMConstraints:
         result = dialog.show()
         if result:
             self.editor.cfm.constraints.append(result)
-        self.update_constraints(self.editor.cfm.constraints)
+        self.editor.update_model_state()
