@@ -13,9 +13,10 @@ From the context menu, select the option "Add Child". This will open a dialog fo
 **3. Enter Feature Details**
 
 In the dialog, provide the following details:
+
 - Name: Enter a name for the new feature.
 - Cardinalities: Specify the cardinality values for the feature (e.g., 1..1, 0..*, etc.).
-Click the "Add" button to confirm and create the feature.
+  Click the "Add" button to confirm and create the feature.
 
 ![Add Feature](../images/add_feature.png)
 
