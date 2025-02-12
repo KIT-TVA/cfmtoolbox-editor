@@ -274,11 +274,10 @@ class CFMCanvas:
                 anchor = tk.CENTER
                 feature_instance_x = x
         feature_instance_y = padded_bbox[1] - 10
-        # TODO: The brackets don't look nice
         self.canvas.create_text(
             feature_instance_x,
             feature_instance_y,
-            text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            text=cardinality_to_display_str(feature.instance_cardinality, "⟨", "⟩"),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_feature_instance",
             anchor=anchor,
@@ -311,7 +310,7 @@ class CFMCanvas:
             group_instance_x,
             group_instance_y,
             text=cardinality_to_display_str(
-                feature.group_instance_cardinality, "<", ">"
+                feature.group_instance_cardinality, "⟨", "⟩"
             ),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_instance",
@@ -346,17 +345,23 @@ class CFMCanvas:
         menu.post(event.x_root, event.y_root)
 
     def _on_left_click_node(self, event, feature: Feature):
+        self._highlight_feature(feature)
+
+    def _highlight_feature(self, feature):
+        self._cancel_highlight()
+        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
+        if node_id:
+            self.canvas.itemconfig(node_id[0], fill="lightblue")
+            self.currently_highlighted_feature = feature
+
+    def _cancel_highlight(self):
         if self.currently_highlighted_feature:
             previous_node = self.canvas.find_withtag(
                 f"feature_rect:{self.currently_highlighted_feature.name}"
             )
             if previous_node:
                 self.canvas.itemconfig(previous_node[0], fill="lightgrey")
-
-        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
-        if node_id:
-            self.canvas.itemconfig(node_id[0], fill="lightblue")
-            self.currently_highlighted_feature = feature
+            self.currently_highlighted_feature = None
 
     def _toggle_children(self, event, feature):
         self.expanded_features[id(feature)] = not self.expanded_features.get(
@@ -371,11 +376,7 @@ class CFMCanvas:
         Args:
             feature (Feature): The feature to start the constraint from.
         """
-        feature_node = self.canvas.find_withtag(f"feature_rect:{feature.name}")
-        if feature_node:
-            self.canvas.itemconfig(feature_node[0], fill="lightblue")
-            self.currently_highlighted_feature = feature
-            # TODO: Make previously highlighted feature lightgrey again
+        self._highlight_feature(feature)
 
         def on_canvas_click(event):
             clicked_item = self.canvas.find_withtag("current")
@@ -428,13 +429,7 @@ class CFMCanvas:
         self.canvas.delete(self.info_label)
         self.canvas.delete(self.cancel_button_window)
         self.canvas.unbind(self.click_handler.left_click())
-        if self.currently_highlighted_feature:
-            feature_node = self.canvas.find_withtag(
-                f"feature_rect:{self.currently_highlighted_feature.name}"
-            )
-            if feature_node:
-                self.canvas.itemconfig(feature_node[0], fill="lightgrey")
-            self.currently_highlighted_feature = None
+        self._cancel_highlight()
 
     def add_expanded_feature(self, feature: Feature):
         """
