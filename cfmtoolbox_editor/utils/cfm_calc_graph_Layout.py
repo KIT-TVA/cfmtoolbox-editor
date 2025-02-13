@@ -29,14 +29,14 @@ class GraphLayoutCalculator:
     """
 
     def __init__(
-        self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+            self, cfm: CFM, expanded_features: dict[str, bool], max_node_width: int
     ):
         """
         Initialize the GraphLayoutCalculator with the specified parameters.
 
         Args:
             cfm (CFM): The feature model to calculate the layout for.
-            expanded_features (dict[int, bool]): Dictionary to track expanded/collapsed state of features.
+            expanded_features (dict[str, bool]): Dictionary to track expanded/collapsed state of features.
             max_node_width (int): The maximum width of a node in the graph. If the text is longer, it will be cut off.
         """
         self.cfm = cfm
@@ -80,7 +80,7 @@ class GraphLayoutCalculator:
             depth (int): The current depth in the tree.
         """
         self.pos[id(feature)].y = depth * 100 + 50
-        if self.expanded_features[id(feature)]:
+        if self.expanded_features[feature.name]:
             for child in feature.children:
                 self._compute_y(child, depth + 1)
 
@@ -108,7 +108,7 @@ class GraphLayoutCalculator:
         )
         children = feature.children
         if (
-            not self.expanded_features[id(feature)]
+                not self.expanded_features[feature.name]
             or not children
             or len(children) == 0
         ):
@@ -214,6 +214,6 @@ class GraphLayoutCalculator:
         else:
             self.pos[id(feature)].x = self.pos[id(parent)].x + self.shift[id(feature)]
 
-        if self.expanded_features[id(feature)]:
+        if self.expanded_features[feature.name]:
             for child in feature.children:
                 self._compute_x(child)

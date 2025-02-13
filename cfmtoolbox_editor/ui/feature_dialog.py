@@ -29,9 +29,10 @@ class FeatureDialog:
     cardinalities when necessary and provides feedback if a new group is created.
 
     Attributes:
-        parent: The Tk root window or parent widget.
+        parent_widget: The Tk root window or parent widget.
         cfm: The feature model containing the list of features.
-        expanded_features: Dictionary of feature IDs to expanded/collapsed states.
+        add_expanded_feature_callback: Callback to add a new feature to the expanded features list.
+        update_feature_name_callback: Callback to update the feature name.
         update_model_state_callback: Callback to update the model state.
         show_feature_dialog_callback: Callback to reopen the dialog for a parent feature.
         parent_feature: The parent feature for the new feature (if adding).
@@ -43,6 +44,7 @@ class FeatureDialog:
         parent_widget,
         cfm,
         add_expanded_feature_callback,
+            update_feature_name_callback,
         update_model_state_callback,
         show_feature_dialog_callback,
         parent_feature=None,
@@ -55,6 +57,7 @@ class FeatureDialog:
             parent_widget (tk.Widget): The parent widget for the dialog.
             cfm: The feature model containing the list of features.
             add_expanded_feature_callback (callable): Callback to mark a feature as expanded.
+            update_feature_name_callback (callable): Callback to update the feature name.
             update_model_state_callback (callable): Callback to update the model state.
             show_feature_dialog_callback (callable): Callback to reopen the dialog for a parent feature.
             parent_feature (Feature, optional): The parent feature for the new feature. Defaults to None.
@@ -63,6 +66,7 @@ class FeatureDialog:
         self.parent_widget = parent_widget  # The Tk root window or parent widget
         self.cfm = cfm
         self.add_expanded_feature_callback = add_expanded_feature_callback
+        self.update_feature_name_callback = update_feature_name_callback
         self.update_model_state_callback = update_model_state_callback
         self.show_feature_dialog_callback = show_feature_dialog_callback
         self.parent_feature = parent_feature
@@ -206,6 +210,7 @@ class FeatureDialog:
                 ) = derive_parent_group_cards_for_one_child(
                     self.feature.instance_cardinality
                 )
+            self.update_feature_name_callback(feature_name)
         else:
             new_feature = Feature(
                 name=feature_name,
