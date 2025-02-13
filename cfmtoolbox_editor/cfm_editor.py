@@ -127,6 +127,7 @@ class CFMEditorApp:
         """
         Update the model state after any change.
         """
+        self.canvas.cancel_add_constraint()
         self.undo_redo_manager.add_state(self.cfm, self.canvas.expanded_features)
         self.canvas.draw_model()
         self.update_constraints()
@@ -160,7 +161,7 @@ class CFMEditorApp:
         ):
             return
         self.cfm.constraints.remove(constraint)
-        self.update_constraints()
+        self.update_model_state()
 
     def add_feature(self, parent):
         """
