@@ -19,7 +19,7 @@ class GraphLayoutCalculator:
     """
 
     def __init__(
-        self, cfm: CFM, expanded_features: dict[int, bool], max_node_width: int
+        self, cfm: CFM, expanded_features: dict[str, bool], max_node_width: int
     ):
         self.cfm = cfm
         """The feature model to calculate the layout for."""
@@ -50,7 +50,7 @@ class GraphLayoutCalculator:
     def _compute_y(self, feature: Feature, depth: int):
         """The leveled y coordinate is calculated by a simple breadth-first traversal."""
         self.pos[id(feature)].y = depth * 100 + 50
-        if self.expanded_features[id(feature)]:
+        if self.expanded_features[feature.name]:
             for child in feature.children:
                 self._compute_y(child, depth + 1)
 
@@ -69,7 +69,7 @@ class GraphLayoutCalculator:
         children = feature.children
         # Base case
         if (
-            not self.expanded_features[id(feature)]
+            not self.expanded_features[feature.name]
             or not children
             or len(children) == 0
         ):
@@ -137,7 +137,7 @@ class GraphLayoutCalculator:
         else:
             self.pos[id(feature)].x = self.pos[id(parent)].x + self.shift[id(feature)]
 
-        if self.expanded_features[id(feature)]:
+        if self.expanded_features[feature.name]:
             for child in feature.children:
                 self._compute_x(child)
 

@@ -1,3 +1,12 @@
+"""
+This module defines the CFMCanvas class, which is responsible for rendering and interacting with a feature model
+using the Tkinter library. The CFMCanvas class provides functionalities to draw features, manage their expanded/collapsed
+states, and handle user interactions such as adding, editing, and deleting features, as well as adding constraints between them.
+
+Classes:
+    CFMCanvas: A class to create and manage a canvas for displaying and interacting with a feature model.
+"""
+
 import tkinter as tk
 from math import degrees, atan2
 from tkinter import ttk, messagebox
@@ -25,7 +34,7 @@ class CFMCanvas:
         self.click_handler = click_handler
 
         self.expanded_features: Dict[
-            int, bool
+            str, bool
         ] = {}  # Dictionary to track expanded/collapsed state of features
         self.positions: Dict[int, Point] = {}
         self.currently_highlighted_feature: Feature | None = None
@@ -39,11 +48,20 @@ class CFMCanvas:
         self._create_canvas()
 
     def initialize(self):
+        """
+        Initialize the canvas by setting the initial states of all features.
+        """
         self.initialize_feature_states(self.editor.cfm.root)
 
     def initialize_feature_states(self, feature):
+        """
+        Recursively initialize the expanded/collapsed states of all features.
+
+        Args:
+            feature (Feature): The feature to initialize.
+        """
         # Initialize all features as expanded
-        self.expanded_features[id(feature)] = True
+        self.expanded_features[feature.name] = True
         for child in feature.children:
             self.initialize_feature_states(child)
 
@@ -72,12 +90,27 @@ class CFMCanvas:
         self.h_scroll.pack(side=tk.BOTTOM, fill=tk.X, padx=self.v_scroll.winfo_width())
 
     def clear(self):
+        """
+        Clear all elements from the canvas.
+        """
         self.canvas.delete("all")
 
     def configure_scroll_region(self, x_min, y_min, x_max, y_max):
+        """
+        Configure the scroll region of the canvas.
+
+        Args:
+            x_min (int): Minimum x-coordinate of the scroll region.
+            y_min (int): Minimum y-coordinate of the scroll region.
+            x_max (int): Maximum x-coordinate of the scroll region.
+            y_max (int): Maximum y-coordinate of the scroll region.
+        """
         self.canvas.config(scrollregion=(x_min, y_min, x_max, y_max))
 
     def draw_model(self):
+        """
+        Draw the entire feature model on the canvas.
+        """
         self.positions = GraphLayoutCalculator(
             self.editor.cfm, self.expanded_features, self.MAX_NODE_WIDTH
         ).compute_positions()
@@ -119,7 +152,7 @@ class CFMCanvas:
         )
 
         # Recursively draw children if expanded
-        if feature.children and self.expanded_features.get(id(feature), True):
+        if feature.children and self.expanded_features.get(feature.name, True):
             # arc for group
             arc_radius = 35
             x_center = x
@@ -241,18 +274,17 @@ class CFMCanvas:
                 anchor = tk.CENTER
                 feature_instance_x = x
         feature_instance_y = padded_bbox[1] - 10
-        # TODO: The brackets don't look nice
         self.canvas.create_text(
             feature_instance_x,
             feature_instance_y,
-            text=cardinality_to_display_str(feature.instance_cardinality, "<", ">"),
+            text=cardinality_to_display_str(feature.instance_cardinality, "⟨", "⟩"),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_feature_instance",
             anchor=anchor,
         )
 
     def _draw_collapse_expand_button(self, feature, padded_bbox, y):
-        expanded = self.expanded_features.get(id(feature), True)
+        expanded = self.expanded_features.get(feature.name, True)
         button_text, button_color = ("-", "firebrick") if expanded else ("+", "green")
         button_id = self.canvas.create_text(
             padded_bbox[2] + 10,
@@ -278,7 +310,7 @@ class CFMCanvas:
             group_instance_x,
             group_instance_y,
             text=cardinality_to_display_str(
-                feature.group_instance_cardinality, "<", ">"
+                feature.group_instance_cardinality, "⟨", "⟩"
             ),
             font=self.CARDINALITY_FONT,
             tags=f"{feature.name}_group_instance",
@@ -313,30 +345,38 @@ class CFMCanvas:
         menu.post(event.x_root, event.y_root)
 
     def _on_left_click_node(self, event, feature: Feature):
+        self._highlight_feature(feature)
+
+    def _highlight_feature(self, feature):
+        self._cancel_highlight()
+        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
+        if node_id:
+            self.canvas.itemconfig(node_id[0], fill="lightblue")
+            self.currently_highlighted_feature = feature
+
+    def _cancel_highlight(self):
         if self.currently_highlighted_feature:
             previous_node = self.canvas.find_withtag(
                 f"feature_rect:{self.currently_highlighted_feature.name}"
             )
             if previous_node:
                 self.canvas.itemconfig(previous_node[0], fill="lightgrey")
-
-        node_id = self.canvas.find_withtag(f"feature_rect:{feature.name}")
-        if node_id:
-            self.canvas.itemconfig(node_id[0], fill="lightblue")
-            self.currently_highlighted_feature = feature
+            self.currently_highlighted_feature = None
 
     def _toggle_children(self, event, feature):
-        self.expanded_features[id(feature)] = not self.expanded_features.get(
-            id(feature), True
+        self.expanded_features[feature.name] = not self.expanded_features.get(
+            feature.name, True
         )
         self.editor.update_model_state()
 
     def add_constraint(self, feature):
-        feature_node = self.canvas.find_withtag(f"feature_rect:{feature.name}")
-        if feature_node:
-            self.canvas.itemconfig(feature_node[0], fill="lightblue")
-            self.currently_highlighted_feature = feature
-            # TODO: Make previously highlighted feature lightgrey again
+        """
+        Start the process of adding a constraint between features.
+
+        Args:
+            feature (Feature): The feature to start the constraint from.
+        """
+        self._highlight_feature(feature)
 
         def on_canvas_click(event):
             clicked_item = self.canvas.find_withtag("current")
@@ -383,16 +423,28 @@ class CFMCanvas:
         self.canvas.bind(self.click_handler.left_click(), on_canvas_click)
 
     def cancel_add_constraint(self):
+        """
+        Cancel the process of adding a constraint.
+        """
         self.canvas.delete(self.info_label)
         self.canvas.delete(self.cancel_button_window)
         self.canvas.unbind(self.click_handler.left_click())
-        if self.currently_highlighted_feature:
-            feature_node = self.canvas.find_withtag(
-                f"feature_rect:{self.currently_highlighted_feature.name}"
-            )
-            if feature_node:
-                self.canvas.itemconfig(feature_node[0], fill="lightgrey")
-            self.currently_highlighted_feature = None
+        self._cancel_highlight()
 
     def add_expanded_feature(self, feature: Feature):
-        self.expanded_features[id(feature)] = True
+        """
+        Mark a feature as expanded.
+
+        Args:
+            feature (Feature): The feature to mark as expanded.
+        """
+        self.expanded_features[feature.name] = True
+
+    def update_feature_name(self, old_name: str, new_name: str):
+        """
+        Update the name of a feature in the expanded features dictionary.
+        :param old_name: previous name of the feature
+        :param new_name: new name of the feature
+        """
+        if old_name in self.expanded_features:
+            self.expanded_features[new_name] = self.expanded_features.pop(old_name)

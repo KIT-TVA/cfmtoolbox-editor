@@ -1,3 +1,11 @@
+"""
+This module defines the ToolTip class, which is responsible for displaying tooltips
+when hovering over widgets or canvas items in the Tkinter library.
+
+Classes:
+    ToolTip: A class to create and manage tooltips for Tkinter widgets and canvas items.
+"""
+
 import tkinter as tk
 from tkinter import ttk
 
@@ -6,15 +14,23 @@ class ToolTip:
     """Tooltip class to show short texts when hovering a widget or canvas item."""
 
     def __init__(self, widget):
+        """
+        Initialize the ToolTip with the specified widget.
+
+        Args:
+            widget (tk.Widget): The widget to attach the tooltip to.
+        """
         self.widget = widget
         self.tip_window = None
 
     def show_tip(self, text, x_pos: int = 0, y_pos: int = 0):
         """
         Show the tooltip with a specified text.
-        :param text: Text to display in the tooltip
-        :param x_pos: x coordinate relative to the widget
-        :param y_pos: y coordinate relative to the widget
+
+        Args:
+            text (str): Text to display in the tooltip.
+            x_pos (int): x coordinate relative to the widget.
+            y_pos (int): y coordinate relative to the widget.
         """
         margin = 10
 
