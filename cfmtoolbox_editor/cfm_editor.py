@@ -8,8 +8,10 @@ Classes:
 """
 
 import tkinter as tk
+from functools import partial
 from tkinter import ttk
 from tkinter import messagebox
+from typing import Tuple, Dict
 
 from cfmtoolbox import Feature, CFM
 
@@ -54,8 +56,10 @@ class CFMEditorApp:
             CFM: The edited feature model.
         """
         self.cfm = cfm
-        self.undo_redo_manager.set_initial_state(self.cfm)
         self.canvas.initialize()
+        self.undo_redo_manager.set_initial_state(
+            self.cfm, self.canvas.expanded_features
+        )
         self.update_model_state()
         self.root.mainloop()
         return self.cfm
@@ -74,7 +78,6 @@ class CFMEditorApp:
         # Canvas (for model graph)
         self.canvas = CFMCanvas(main_frame, self.root, self, self.click_handler)
 
-        # TODO: is that necessary?
         # Update the shortcut manager with the new editor instance
         self.shortcut_manager.update_editor(self)
 
@@ -115,9 +118,9 @@ class CFMEditorApp:
         if next_state:
             self._load_state(next_state)
 
-    def _load_state(self, state: CFM):
-        self.cfm = state
-        self.canvas.initialize_feature_states(self.cfm.root)
+    def _load_state(self, state: Tuple[CFM, Dict[str, bool]]):
+        self.cfm = state[0]
+        self.canvas.expanded_features = state[1]
         self.canvas.draw_model()
         self.update_constraints()
 
@@ -126,7 +129,7 @@ class CFMEditorApp:
         Update the model state after any change.
         """
         self.canvas.cancel_add_constraint()
-        self.undo_redo_manager.add_state(self.cfm)
+        self.undo_redo_manager.add_state(self.cfm, self.canvas.expanded_features)
         self.canvas.draw_model()
         self.update_constraints()
 
@@ -237,6 +240,10 @@ class CFMEditorApp:
             parent_widget=self.root,
             cfm=self.cfm,
             add_expanded_feature_callback=self.add_expanded_feature,
+            update_feature_name_callback=partial(
+                self.canvas.update_feature_name,
+                None if feature is None else feature.name,
+            ),
             update_model_state_callback=self.update_model_state,
             show_feature_dialog_callback=self.show_feature_dialog,
             parent_feature=parent,

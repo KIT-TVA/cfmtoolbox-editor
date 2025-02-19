@@ -5,7 +5,7 @@ from cfmtoolbox_editor.utils.cfm_editor_undo_redo import UndoRedoManager
 
 @pytest.fixture
 def sandwich_cfm():
-    # Root feature mit allen erforderlichen Argumenten
+    # Root feature with all required arguments
     sandwich = Feature(
         name="sandwich",
         instance_cardinality=Cardinality([Interval(1, 1)]),
@@ -97,15 +97,20 @@ def sandwich_cfm():
     return CFM(root=sandwich, constraints=constraints)
 
 
+def expanded_features(cfm: CFM):
+    return {feature.name: True for feature in cfm.features}
+
+
 class TestUndoRedoManager:
     """Test class for UndoRedoManager"""
 
     def test_add_state_with_sandwich_cfm(self, sandwich_cfm):
         """Test adding states with sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Verify the state is added
         assert len(manager.undo_stack) == 1
@@ -114,9 +119,10 @@ class TestUndoRedoManager:
     def test_undo_on_initial_sandwich_cfm(self, sandwich_cfm):
         """Test undo on the initial state of sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         result = manager.undo()
         assert result is None  # Undo should return None for the initial state.
@@ -124,9 +130,10 @@ class TestUndoRedoManager:
     def test_redo_on_empty_sandwich_cfm(self, sandwich_cfm):
         """Test redo on an empty redo stack with sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         result = manager.redo()
         assert result is None  # Redo should return None as there is no undone state.
@@ -134,15 +141,15 @@ class TestUndoRedoManager:
     def test_undo_redo_multiple_changes_sandwich_cfm(self, sandwich_cfm):
         """Test undo and redo for multiple changes in sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Change 1: Modify bread cardinality
         bread = self.sandwich_cfm.root.children[0]
         bread.instance_cardinality.intervals[0].upper = 3
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Change 2: Add a new feature
         new_feature = Feature(
@@ -154,51 +161,55 @@ class TestUndoRedoManager:
             children=[],
         )
         self.sandwich_cfm.root.children.append(new_feature)
-        manager.add_state(self.sandwich_cfm)
+        self.expanded_features = expanded_features(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Undo both changes
-        assert manager.undo().root.children[-1].name != "Cheese"  # Undo addition
+        assert manager.undo()[0].root.children[-1].name != "Cheese"  # Undo addition
         assert (
-            manager.undo().root.children[0].instance_cardinality.intervals[0].upper == 2
+            manager.undo()[0].root.children[0].instance_cardinality.intervals[0].upper
+            == 2
         )  # Undo cardinality change
 
         # Redo both changes
         assert (
-            manager.redo().root.children[0].instance_cardinality.intervals[0].upper == 3
+            manager.redo()[0].root.children[0].instance_cardinality.intervals[0].upper
+            == 3
         )  # Redo cardinality change
-        assert manager.redo().root.children[-1].name == "Cheese"  # Redo addition
+        assert manager.redo()[0].root.children[-1].name == "Cheese"  # Redo addition
 
     def test_clear_redo_stack_on_new_state_sandwich_cfm(self, sandwich_cfm):
         """Test that adding a new state after undo clears the redo stack"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Change: Modify bread cardinality
         bread = self.sandwich_cfm.root.children[0]
-        bread.instance_cardinality.intervals[0].max = 3
-        manager.add_state(self.sandwich_cfm)
+        bread.instance_cardinality.intervals[0].upper = 3
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Undo the change
-        self.sandwich_cfm = manager.undo()
+        self.sandwich_cfm = manager.undo()[0]
 
         # Add a new change
         self.sandwich_cfm.root.name = "ModifiedSandwich"
-        manager.add_state(self.sandwich_cfm)
+        self.expanded_features = expanded_features(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Verify redo stack is cleared
         assert len(manager.redo_stack) == 0
-        assert manager.undo().root.name == "sandwich"  # Undo the new change
+        assert manager.undo()[0].root.name == "sandwich"  # Undo the new change
 
     def test_no_effect_on_single_state_undo(self, sandwich_cfm):
         """Test undo with only a single state in the undo stack"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Add initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Try undo
         result = manager.undo()
@@ -207,10 +218,10 @@ class TestUndoRedoManager:
     def test_large_changes_sandwich_cfm(self, sandwich_cfm):
         """Test undo/redo behavior with significant changes in sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Add initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         prev_length = len(self.sandwich_cfm.root.children)
 
@@ -226,27 +237,28 @@ class TestUndoRedoManager:
                     children=[],
                 )
             )
-            manager.add_state(self.sandwich_cfm)
+            self.expanded_features = expanded_features(self.sandwich_cfm)
+            manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Undo all changes
         for _ in range(10):
-            self.sandwich_cfm = manager.undo()
+            self.sandwich_cfm = manager.undo()[0]
 
         assert len(self.sandwich_cfm.root.children) == prev_length
 
         # Redo all changes
         for _ in range(10):
-            self.sandwich_cfm = manager.redo()
+            self.sandwich_cfm = manager.redo()[0]
 
         assert len(self.sandwich_cfm.root.children) == prev_length + 10
 
     def test_alternating_undo_redo_cycles_sandwich_cfm(self, sandwich_cfm):
         """Test alternating undo and redo cycles in sandwich CFM"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Add initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         prev_length = len(self.sandwich_cfm.root.children)
 
@@ -262,48 +274,50 @@ class TestUndoRedoManager:
                     children=[],
                 )
             )
-            manager.add_state(self.sandwich_cfm)
+            self.expanded_features = expanded_features(self.sandwich_cfm)
+            manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Perform alternating undo and redo cycles
         for _ in range(5):
-            self.sandwich_cfm = manager.undo()
+            self.sandwich_cfm = manager.undo()[0]
             assert len(self.sandwich_cfm.root.children) == prev_length + 4
 
-            self.sandwich_cfm = manager.redo()
+            self.sandwich_cfm = manager.redo()[0]
             assert len(self.sandwich_cfm.root.children) == prev_length + 5
 
     def test_delete_cheesemix_undo_redo_add_child_undo(self, sandwich_cfm):
         """Test deleting Cheesemix, undo, redo, undo, adding a child, and undo"""
         self.sandwich_cfm = sandwich_cfm
+        self.expanded_features = expanded_features(self.sandwich_cfm)
         manager = UndoRedoManager()
 
-        # Add initial state
-        manager.add_state(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
 
         # Step 1: Delete Cheesemix
         cheesemix = self.sandwich_cfm.root.children.pop(1)
-        manager.add_state(self.sandwich_cfm)
+        self.expanded_features = expanded_features(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
         assert len(self.sandwich_cfm.root.children) == 2
         assert all(
             child.name != "Cheesemix" for child in self.sandwich_cfm.root.children
         )
 
         # Step 2: Undo the deletion
-        self.sandwich_cfm = manager.undo()
+        self.sandwich_cfm = manager.undo()[0]
         assert len(self.sandwich_cfm.root.children) == 3
         assert any(
             child.name == "Cheesemix" for child in self.sandwich_cfm.root.children
         )
 
         # Step 3: Redo the deletion
-        self.sandwich_cfm = manager.redo()
+        self.sandwich_cfm = manager.redo()[0]
         assert len(self.sandwich_cfm.root.children) == 2
         assert all(
             child.name != "Cheesemix" for child in self.sandwich_cfm.root.children
         )
 
         # Step 4: Undo the deletion again
-        self.sandwich_cfm = manager.undo()
+        self.sandwich_cfm = manager.undo()[0]
         assert len(self.sandwich_cfm.root.children) == 3
         assert any(
             child.name == "Cheesemix" for child in self.sandwich_cfm.root.children
@@ -324,11 +338,12 @@ class TestUndoRedoManager:
             children=[],
         )
         cheesemix.children.append(new_child)
-        manager.add_state(self.sandwich_cfm)
+        self.expanded_features = expanded_features(self.sandwich_cfm)
+        manager.add_state(self.sandwich_cfm, self.expanded_features)
         assert len(cheesemix.children) == 1
 
         # Step 6: Undo the addition of the child
-        self.sandwich_cfm = manager.undo()
+        self.sandwich_cfm = manager.undo()[0]
         cheesemix = next(
             child
             for child in self.sandwich_cfm.root.children

@@ -34,7 +34,7 @@ class CFMCanvas:
         self.click_handler = click_handler
 
         self.expanded_features: Dict[
-            int, bool
+            str, bool
         ] = {}  # Dictionary to track expanded/collapsed state of features
         self.positions: Dict[int, Point] = {}
         self.currently_highlighted_feature: Feature | None = None
@@ -61,7 +61,7 @@ class CFMCanvas:
             feature (Feature): The feature to initialize.
         """
         # Initialize all features as expanded
-        self.expanded_features[id(feature)] = True
+        self.expanded_features[feature.name] = True
         for child in feature.children:
             self.initialize_feature_states(child)
 
@@ -152,7 +152,7 @@ class CFMCanvas:
         )
 
         # Recursively draw children if expanded
-        if feature.children and self.expanded_features.get(id(feature), True):
+        if feature.children and self.expanded_features.get(feature.name, True):
             # arc for group
             arc_radius = 35
             x_center = x
@@ -284,7 +284,7 @@ class CFMCanvas:
         )
 
     def _draw_collapse_expand_button(self, feature, padded_bbox, y):
-        expanded = self.expanded_features.get(id(feature), True)
+        expanded = self.expanded_features.get(feature.name, True)
         button_text, button_color = ("-", "firebrick") if expanded else ("+", "green")
         button_id = self.canvas.create_text(
             padded_bbox[2] + 10,
@@ -364,8 +364,8 @@ class CFMCanvas:
             self.currently_highlighted_feature = None
 
     def _toggle_children(self, event, feature):
-        self.expanded_features[id(feature)] = not self.expanded_features.get(
-            id(feature), True
+        self.expanded_features[feature.name] = not self.expanded_features.get(
+            feature.name, True
         )
         self.editor.update_model_state()
 
@@ -438,4 +438,13 @@ class CFMCanvas:
         Args:
             feature (Feature): The feature to mark as expanded.
         """
-        self.expanded_features[id(feature)] = True
+        self.expanded_features[feature.name] = True
+
+    def update_feature_name(self, old_name: str, new_name: str):
+        """
+        Update the name of a feature in the expanded features dictionary.
+        :param old_name: previous name of the feature
+        :param new_name: new name of the feature
+        """
+        if old_name in self.expanded_features:
+            self.expanded_features[new_name] = self.expanded_features.pop(old_name)
