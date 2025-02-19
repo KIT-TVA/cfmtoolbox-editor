@@ -142,9 +142,9 @@ class GraphLayoutCalculator:
                 self._compute_x(child)
 
     def _calculate_distances(
-            self,
-            children: List[Feature],
-            children_contours: Dict[int, Tuple[List[int], List[int]]],
+        self,
+        children: List[Feature],
+        children_contours: Dict[int, Tuple[List[int], List[int]]],
     ) -> Tuple[List[int], List[int], List[int]]:
         """
         Calculate the distances between the children and update the contours of the subtree.
@@ -179,11 +179,11 @@ class GraphLayoutCalculator:
                 new_right_contour.append(
                     -sum(new_right_contour)
                     - d[i]
-                    + sum(current_right_contour[0: current_height_right + 1])
+                    + sum(current_right_contour[0 : current_height_right + 1])
                 )
                 new_right_contour.extend(
                     current_right_contour[
-                    current_height_right + 1: len(current_right_contour)
+                        current_height_right + 1 : len(current_right_contour)
                     ]
                 )
             current_right_contour = new_right_contour
@@ -194,10 +194,10 @@ class GraphLayoutCalculator:
                 current_left_contour.append(
                     -sum(current_left_contour)
                     + d[i]
-                    + sum(next_left_contour[0: current_height_left + 1])
+                    + sum(next_left_contour[0 : current_height_left + 1])
                 )
                 current_left_contour.extend(
-                    next_left_contour[current_height_left + 1: len(next_left_contour)]
+                    next_left_contour[current_height_left + 1 : len(next_left_contour)]
                 )
         return d, current_left_contour, current_right_contour
 
