@@ -241,7 +241,8 @@ class CFMEditorApp:
             cfm=self.cfm,
             add_expanded_feature_callback=self.add_expanded_feature,
             update_feature_name_callback=partial(
-                self.canvas.update_feature_name, None if feature is None else feature.name
+                self.canvas.update_feature_name,
+                None if feature is None else feature.name,
             ),
             update_model_state_callback=self.update_model_state,
             show_feature_dialog_callback=self.show_feature_dialog,
