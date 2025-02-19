@@ -96,6 +96,7 @@ def sandwich_cfm():
 
     return CFM(root=sandwich, constraints=constraints)
 
+
 def expanded_features(cfm: CFM):
     return {feature.name: True for feature in cfm.features}
 
@@ -166,12 +167,14 @@ class TestUndoRedoManager:
         # Undo both changes
         assert manager.undo()[0].root.children[-1].name != "Cheese"  # Undo addition
         assert (
-            manager.undo()[0].root.children[0].instance_cardinality.intervals[0].upper == 2
+            manager.undo()[0].root.children[0].instance_cardinality.intervals[0].upper
+            == 2
         )  # Undo cardinality change
 
         # Redo both changes
         assert (
-            manager.redo()[0].root.children[0].instance_cardinality.intervals[0].upper == 3
+            manager.redo()[0].root.children[0].instance_cardinality.intervals[0].upper
+            == 3
         )  # Redo cardinality change
         assert manager.redo()[0].root.children[-1].name == "Cheese"  # Redo addition
 
